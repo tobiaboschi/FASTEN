@@ -26,13 +26,13 @@
             phi_y: function phi(y) defined in the dal algorithm
             grad_phi: gradient of the function phi(y)
 
-    class OutputSolverCore: definition of the output for the core part of each solver (FS, FF, FC, and SF)
+    class OutputSolverCore: definition of the output for the core part of each fasten (FS, FF, FC, and SF)
 
-    class OutputSolver: definition of the output for each solver (FS, FF, FC, and SF)
+    class OutputSolver: definition of the output for each fasten (FS, FF, FC, and SF)
 
-    class OutputPathCore: definition of the output for the core part of path solver
+    class OutputPathCore: definition of the output for the core part of path fasten
 
-    class OutputPath: definition of the output for the path solver
+    class OutputPath: definition of the output for the path fasten
 
     function standardize_A: take as input A and returns A standardized
 
@@ -474,7 +474,7 @@ class OutputSolverCore:
 class OutputSolver:
 
     """
-    Definition of the output class for solver
+    Definition of the output class for fasten
 
     """
 

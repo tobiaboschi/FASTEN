@@ -1,8 +1,8 @@
-""" class SolverFF
-        solver for Function-on-Function regression
+""" class SolverFS
+        fasten for Function-on-Scalar regression
 
     solver_core: carries out the Dual Augmented Lagrangian minimization algorithm
-    solver: pre-process --> solver_core --> post-process
+    fasten: pre-process --> solver_core --> post-process
 
     INPUT PARAMETERS:
     --------------------------------------------------------------------------------------------------------------------
@@ -79,16 +79,14 @@
 
 """
 
-
 import time
 import numpy as np
 from numpy import linalg as LA
 import scipy.sparse.linalg as ss_LA
 from scipy.linalg import block_diag
-from solver.auxiliary_functions import SelectionCriteria, AuxiliaryFunctionsFF, OutputSolver, OutputSolverCore
+from fasten.auxiliary_functions import SelectionCriteria, AuxiliaryFunctionsFS, OutputSolver, OutputSolverCore
 
-
-class SolverFF:
+class SolverFS:
 
     def solver_core(self, A, b, k, m, n, wgts,
                     lam1, lam2,
@@ -103,7 +101,7 @@ class SolverFF:
         #    initialize variables    #
         # -------------------------- #
 
-        af = AuxiliaryFunctionsFF()
+        af = AuxiliaryFunctionsFS()
 
         x = x0
         y = y0
@@ -111,11 +109,11 @@ class SolverFF:
         Aty = Aty0
 
         if x is None:
-            x = np.zeros((n * k, k))
+            x = np.zeros((n, k))
         if y is None:
             y = np.zeros((m, k))
         if z is None:
-            z = np.zeros((n * k, k))
+            z = np.zeros((n, k))
         if Aty0 is None:
             Aty = A.T @ y
 
@@ -149,18 +147,16 @@ class SolverFF:
                 #    select active features    #
                 # ---------------------------- #
 
-                normst = LA.norm(t.reshape(n, k * k), axis=1).reshape(n, 1)
+                normst = LA.norm(t, axis=1).reshape(n, 1)
                 indx = (normst > wgts * sgm * lam1).reshape(n)
-                indx_krep = np.repeat(indx, k)
-                tj = t[indx_krep, :]
-                xj = x[indx_krep, :]
-                AJ = A[:, indx_krep]
+                tj = t[indx, :]
+                xj = x[indx, :]
+                AJ = A[:, indx]
+                r = tj.shape[0]
                 normsj = normst[indx]
                 wgtsj = wgts
                 if isinstance(wgtsj, np.ndarray):
                     wgtsj = wgts[indx, :]
-
-                r = np.int(np.int(AJ.shape[1] / k))
 
                 # ------------------------- #
                 #    compute direction d    #
@@ -182,9 +178,9 @@ class SolverFF:
                     # ------------------------ #
 
                     const = 1 / (1 + wgtsj * sgm * lam2)
-                    delta_prox = ((const * (1 - wgtsj * sgm * lam1 / normsj)).reshape(r, 1, 1) * np.eye(k * k) +
+                    delta_prox = ((const * (1 - wgtsj * sgm * lam1 / normsj)).reshape(r, 1, 1) * np.eye(k) +
                                   (const * wgtsj * sgm * lam1 / normsj ** 3).reshape(r, 1, 1) *
-                                  np.einsum('...i,...j', tj.reshape(r, k * k), tj.reshape(r, k * k)))
+                                  np.einsum('...i,...j', tj, tj))
 
                     AJ_kron = np.kron(AJ, np.eye(k))
 
@@ -193,10 +189,6 @@ class SolverFF:
                     # ------------------- #
 
                     if m <= r:
-                    # if (r * k**4 * (k**2 + r**2 + m**2 + r * n * k)) > (m * k**4 * (r**2 + m**2 + m * r)):
-
-                        #     if (r * k**4 * (k**2 + r**2 + m**2 + r * n * k)) < (m * k**4 * (r**2 + m**2 + m * r)):
-                        #         print('WRONG: classic but should be woodbury')
                         H = np.eye(m * k) + sgm * AJ_kron @ block_diag(*delta_prox) @ AJ_kron.T
 
                         # conjugate method
@@ -214,10 +206,6 @@ class SolverFF:
                     # ---------------------- #
 
                     else:
-
-                        # if (r * k**4 * (k**2 + r**2 + m**2 + r * n * k)) > (m * k**4 * (r**2 + m**2 + m * r)):
-                        #     print('WRONG: woodbury but should be classic')
-
                         # find delta_prox inverse
                         inv_delta_prox = block_diag(*LA.inv(delta_prox))
 
@@ -249,10 +237,9 @@ class SolverFF:
                 # --------------------------- #
 
                 if r > 0:
-                    # kkt1 = np.sum(LA.norm(AJ @ x_temp[indx_krep, :] - b - y, axis=1)) / (1 + np.sum(LA.norm(b, axis=1)))
-                    kkt1 = (np.sum(LA.norm(AJ @ x_temp[indx_krep, :] - b - y, axis=1)) /
-                            (1 + np.sum(LA.norm(b, axis=1)) +
-                             np.sum(LA.norm(x_temp[indx_krep, :].reshape(r, k * k), axis=1))))
+                    # kkt1 = np.sum(LA.norm((AJ @ x_temp[indx, :].ravel()) - b - y)) / (1 + np.sum(LA.norm(b)))
+                    kkt1 = (np.sum(LA.norm(AJ @ x_temp[indx, :] - b - y, axis=1)) /
+                            (1 + np.sum(LA.norm(b, axis=1) + np.sum(LA.norm(x_temp[indx, :], axis=1)))))
                 else:
                     kkt1 = np.sum(LA.norm(A @ x_temp - b - y, axis=1)) / (1 + np.sum(LA.norm(b, axis=1)))
 
@@ -261,7 +248,7 @@ class SolverFF:
                         space = ''
                     else:
                         space = ' '
-                    print(space, '   %.f| ' % (it_nwt + 1), method, ' kkt1 = %.2e  -  r = %.f' % (kkt1, r), sep='')
+                    print(space, '   %.f| ' % (it_nwt + 1), method, ' kkt1 = %.2e -  r = %.f' % (kkt1, r), sep='')
 
                 if kkt1 < tol_nwt or r == 0:
                     convergence_nwt = True
@@ -288,15 +275,14 @@ class SolverFF:
             # ---------------------- #
 
             if r > 0:
-                indx_new = (LA.norm(t.reshape(n, k * k), axis=1).reshape(n, 1) > wgts * sgm * lam1).reshape(n)
+                indx_new = (LA.norm(t, axis=1).reshape(n, 1) > wgts * sgm * lam1).reshape(n)
                 if np.sum(1 * indx_new - 1 * indx) != 0:
                     indx = indx_new
-                    indx_krep = np.repeat(indx, k)
-                    AJ = A[:, indx_krep]
-                    r = np.int(AJ.shape[1] / k)
+                    AJ = A[:, indx]
+                    r = AJ.shape[1]
 
             x = x_temp
-            xj = x[indx_krep, :]
+            xj = x[indx, :]
             if isinstance(wgtsj, np.ndarray):
                 wgtsj = wgts[indx, :]
 
@@ -305,12 +291,11 @@ class SolverFF:
             # --------------------------- #
 
             # compute kkt3
-            kkt3 = (np.sum(LA.norm(z + Aty, axis=1)) /
-                   (1 + np.sum(LA.norm(z.reshape(n, k * k), axis=1)) + np.sum(LA.norm(y, axis=1))))
+            kkt3 = np.sum(LA.norm(z + Aty, axis=1)) / (1 + np.sum(LA.norm(z, axis=1)) + np.sum(LA.norm(y, axis=1)))
 
             # compute objective functions
             prim = af.prim_obj(AJ, xj, b, lam1, lam2, wgtsj)
-            dual = af.dual_obj(y, z[indx_krep, :], b, lam1, lam2, wgtsj)
+            dual = af.dual_obj(y, z[indx, :], b, lam1, lam2, wgtsj)
             dual_gap = np.abs(prim - dual) / (prim + dual)
 
             if print_lev > 2:
@@ -345,7 +330,7 @@ class SolverFF:
                x0=None, y0=None, z0=None, Aty0=None,
                selection_criterion=SelectionCriteria.GCV,
                relaxed_criteria=True, relaxed_estimates=True,
-               sgm=5e-3, sgm_increase=5, sgm_change=1,
+               sgm=5e-3, sgm_increase=5, sgm_change=3,
                tol_nwt=1e-6, tol_dal=1e-6,
                maxiter_nwt=50, maxiter_dal=100,
                use_cg=False, r_exact=2e4,
@@ -355,8 +340,7 @@ class SolverFF:
         #   dimension of the problem   #
         # ---------------------------- #
 
-        m, nk = A.shape
-        n = np.int(nk / k)
+        m, n = A.shape
 
         # ------------------------------------- #
         #    compute lam1 max, lam1 and lam2    #
@@ -374,7 +358,6 @@ class SolverFF:
         #    call solver_core    #
         # ---------------------- #
 
-        # if not adaptive:
         out_core = self.solver_core(
             A=A, b=b, k=k, m=m, n=n, wgts=wgts,
             lam1=lam1, lam2=lam2,
@@ -387,7 +370,6 @@ class SolverFF:
 
         x, xj, AJ = out_core.x, out_core.xj, out_core.AJ
         indx, r = out_core.indx, out_core.r
-        indx_krep = np.repeat(indx, k)
 
         # --------------------- #
         #    post processing    #
@@ -395,11 +377,11 @@ class SolverFF:
 
         xj_criteria = np.copy(xj)
 
-        # ---------------------------- #
-        #    relaxation for criteria   #
-        # ---------------------------- #
+        # ---------------------------------- #
+        #    relax with linear regression    #
+        # ---------------------------------- #
 
-        if r > 0 and m > r * k and relaxed_criteria:
+        if 0 < r < m and relaxed_criteria:
 
             xj_criteria = LA.solve(AJ.T @ AJ, AJ.T @ b)
 
@@ -410,7 +392,7 @@ class SolverFF:
         selection_criterion_value = None
 
         # compute dof
-        df_core = LA.inv(AJ.T @ AJ + lam2 * np.eye(r * k))
+        df_core = LA.inv(AJ.T @ AJ + lam2 * np.eye(r))
         df = np.trace(AJ @ df_core @ AJ.T)
 
         # compute rss
@@ -418,23 +400,22 @@ class SolverFF:
 
         if selection_criterion == SelectionCriteria.GCV:
             selection_criterion_value = rss / (m - k * df) ** 2
-            # gcv = rss / (m - df) ** 2
+            # gcv = rss / (m - k * df) ** 2
 
         elif selection_criterion == SelectionCriteria.EBIC:
             selection_criterion_value = np.log(rss / m) + df * np.log(m) / m + df * np.log(r + 1e-32) / m
-            # ebic = np.log(rss / m) + df * np.log(m) / m + df * np.log(n) / m
-            # ebic = k * np.log(rss / (m * k)) + k * df * np.log(m * k) / m + k * df * np.log(n) / m
+            # ebic = np.log(rss / (m * k)) + df * np.log(m * k) / m + df * np.log(n) / m
 
         # ----------------------------- #
         #    relaxation for estimates   #
         # ----------------------------- #
 
-        if relaxed_estimates and r > 0 and m > r * k:
+        if relaxed_estimates and 0 < r < m:
 
             if not relaxed_criteria:
                 xj_criteria = LA.solve(AJ.T @ AJ, AJ.T @ b)
 
-            x[indx_krep, :] = xj_criteria
+            x[indx, :] = xj_criteria
 
         # ---------------------------- #
         #    printing final results    #
@@ -442,8 +423,8 @@ class SolverFF:
 
         if print_lev > 0:
 
-            if relaxed_estimates and m < r * k:
-                relaxed_print = 'm < r * k, no relaxation performed'
+            if relaxed_estimates and m < r:
+                relaxed_print = 'm < r, no relaxation performed'
             else:
                 relaxed_print = relaxed_estimates
 
@@ -478,3 +459,4 @@ class SolverFF:
                             r, None, indx, selection_criterion_value, out_core.sgm,
                             c_lam, alpha, lam1_max, lam1, lam2,
                             out_core.time, out_core.iters, out_core.Aty, out_core.convergence)
+

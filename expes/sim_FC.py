@@ -1,13 +1,13 @@
-"""code to run the FC solver on synthetic data"""
+"""code to run the FC fasten on synthetic data"""
 
 
 import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
-from solver.solver_path import FASTEN
-from solver.auxiliary_functions import RegressionType, SelectionCriteria, AdaptiveScheme
-from solver.auxiliary_functions import standardize_A
-from solver.generate_sim import GenerateSimFC
+from fasten.solver_path import FASTEN
+from fasten.auxiliary_functions import RegressionType, SelectionCriteria, AdaptiveScheme
+from fasten.auxiliary_functions import standardize_A
+from fasten.generate_sim import GenerateSimFC
 
 if __name__ == '__main__':
 
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     nu_eps = 1.5  # smoothness of eps Matern covariance
 
     # ----------------------- #
-    #  set solver parameters  #
+    #  set fasten parameters  #
     # ----------------------- #
 
     k = None   # number of FPC scores, if None automatically selected
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     A = standardize_A(A)
 
     # --------------- #
-    #  launch solver  #
+    #  launch fasten  #
     # --------------- #
     print('')
     print('  * start fgen')

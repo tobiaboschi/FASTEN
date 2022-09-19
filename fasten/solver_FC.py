@@ -1,8 +1,8 @@
-""" class SolverFS
-        solver for Function-on-Scalar regression
+""" class SolverFC
+        fasten for Function Concurrent and Scalar-on-Function regression
 
     solver_core: carries out the Dual Augmented Lagrangian minimization algorithm
-    solver: pre-process --> solver_core --> post-process
+    fasten: pre-process --> solver_core --> post-process
 
     INPUT PARAMETERS:
     --------------------------------------------------------------------------------------------------------------------
@@ -84,9 +84,10 @@ import numpy as np
 from numpy import linalg as LA
 import scipy.sparse.linalg as ss_LA
 from scipy.linalg import block_diag
-from solver.auxiliary_functions import SelectionCriteria, AuxiliaryFunctionsFS, OutputSolver, OutputSolverCore
+from fasten.auxiliary_functions import SelectionCriteria, AuxiliaryFunctionsFC, OutputSolver, OutputSolverCore
 
-class SolverFS:
+
+class SolverFC:
 
     def solver_core(self, A, b, k, m, n, wgts,
                     lam1, lam2,
@@ -101,7 +102,7 @@ class SolverFS:
         #    initialize variables    #
         # -------------------------- #
 
-        af = AuxiliaryFunctionsFS()
+        af = AuxiliaryFunctionsFC()
 
         x = x0
         y = y0
@@ -111,11 +112,11 @@ class SolverFS:
         if x is None:
             x = np.zeros((n, k))
         if y is None:
-            y = np.zeros((m, k))
+            y = np.zeros(m)
         if z is None:
             z = np.zeros((n, k))
         if Aty0 is None:
-            Aty = A.T @ y
+            Aty = (A.T @ y).reshape(n, k)
 
         convergence_dal = False
 
@@ -151,7 +152,7 @@ class SolverFS:
                 indx = (normst > wgts * sgm * lam1).reshape(n)
                 tj = t[indx, :]
                 xj = x[indx, :]
-                AJ = A[:, indx]
+                AJ = A[:, np.repeat(indx, k)]
                 r = tj.shape[0]
                 normsj = normst[indx]
                 wgtsj = wgts
@@ -171,7 +172,7 @@ class SolverFS:
 
                 else:
 
-                    rhs = - af.grad_phi(A, y, x, b, Aty, sgm, lam1, lam2, wgts).ravel()
+                    rhs = - af.grad_phi(A, y, x, b, Aty, sgm, lam1, lam2, wgts)
 
                     # ------------------------ #
                     #    compute delta prox    #
@@ -182,14 +183,12 @@ class SolverFS:
                                   (const * wgtsj * sgm * lam1 / normsj ** 3).reshape(r, 1, 1) *
                                   np.einsum('...i,...j', tj, tj))
 
-                    AJ_kron = np.kron(AJ, np.eye(k))
-
                     # ------------------- #
                     #    standard case    #
                     # ------------------- #
 
                     if m <= r:
-                        H = np.eye(m * k) + sgm * AJ_kron @ block_diag(*delta_prox) @ AJ_kron.T
+                        H = np.eye(m) + sgm * AJ @ block_diag(*delta_prox) @ AJ.T
 
                         # conjugate method
                         if r * k > r_exact and use_cg:
@@ -199,7 +198,7 @@ class SolverFS:
                         # exact method:
                         else:
                             method = 'E '
-                            d = LA.solve(H, rhs).reshape(m, k)
+                            d = LA.solve(H, rhs)
 
                     # ---------------------- #
                     #    Woodbury formula    #
@@ -212,22 +211,22 @@ class SolverFS:
                         # conjugate method
                         if r * k > r_exact and use_cg:
                             method = 'CG'
-                            d_temp = (ss_LA.cg(inv_delta_prox / sgm + AJ_kron.T @ AJ_kron, AJ_kron.T @ rhs,
+                            d_temp = (ss_LA.cg(inv_delta_prox / sgm + AJ.T @ AJ, AJ.T @ rhs,
                                                tol=1e-04, maxiter=1000)[0])
-                            d = (rhs - AJ_kron @ d_temp).reshape(m, k)
+                            d = (rhs - AJ @ d_temp)
 
                         # exact method:
                         else:
                             method = 'E '
-                            d_temp = LA.solve(inv_delta_prox / sgm + AJ_kron.T @ AJ_kron, AJ_kron.T @ rhs)
-                            d = (rhs - AJ_kron @ d_temp).reshape(m, k)
+                            d_temp = LA.solve(inv_delta_prox / sgm + AJ.T @ AJ, AJ.T @ rhs)
+                            d = (rhs - AJ @ d_temp)
 
                 # ---------------------- #
                 #    update variables    #
                 # ---------------------- #
 
                 y = y + d
-                Aty = A.T @ y
+                Aty = (A.T @ y).reshape(n, k)
                 z = af.prox_star(x / sgm - Aty, wgts * sgm * lam1, wgts * sgm * lam2, sgm)
                 t = x - sgm * Aty
                 x_temp = t - sgm * z
@@ -238,10 +237,10 @@ class SolverFS:
 
                 if r > 0:
                     # kkt1 = np.sum(LA.norm((AJ @ x_temp[indx, :].ravel()) - b - y)) / (1 + np.sum(LA.norm(b)))
-                    kkt1 = (np.sum(LA.norm(AJ @ x_temp[indx, :] - b - y, axis=1)) /
-                            (1 + np.sum(LA.norm(b, axis=1) + np.sum(LA.norm(x_temp[indx, :], axis=1)))))
+                    kkt1 = (np.sum(LA.norm((AJ @ x_temp[indx, :].ravel()) - b - y)) /
+                            (1 + np.sum(LA.norm(b)) + np.sum(LA.norm(x_temp[indx, :].ravel()))))
                 else:
-                    kkt1 = np.sum(LA.norm(A @ x_temp - b - y, axis=1)) / (1 + np.sum(LA.norm(b, axis=1)))
+                    kkt1 = np.sum(LA.norm(A @ x_temp.reshape(n * k) - b - y)) / (1 + np.sum(LA.norm(b)))
 
                 if print_lev > 2:
                     if it_nwt + 1 > 9:
@@ -278,8 +277,8 @@ class SolverFS:
                 indx_new = (LA.norm(t, axis=1).reshape(n, 1) > wgts * sgm * lam1).reshape(n)
                 if np.sum(1 * indx_new - 1 * indx) != 0:
                     indx = indx_new
-                    AJ = A[:, indx]
-                    r = AJ.shape[1]
+                    AJ = A[:, np.repeat(indx, k)]
+                    r = np.int(AJ.shape[1] / k)
 
             x = x_temp
             xj = x[indx, :]
@@ -291,7 +290,7 @@ class SolverFS:
             # --------------------------- #
 
             # compute kkt3
-            kkt3 = np.sum(LA.norm(z + Aty, axis=1)) / (1 + np.sum(LA.norm(z, axis=1)) + np.sum(LA.norm(y, axis=1)))
+            kkt3 = np.sum(LA.norm(z + Aty, axis=1)) / (1 + np.sum(LA.norm(z, axis=1)) + np.sum(LA.norm(y)))
 
             # compute objective functions
             prim = af.prim_obj(AJ, xj, b, lam1, lam2, wgtsj)
@@ -340,7 +339,8 @@ class SolverFS:
         #   dimension of the problem   #
         # ---------------------------- #
 
-        m, n = A.shape
+        m, nk = A.shape
+        n = np.int(nk / k)
 
         # ------------------------------------- #
         #    compute lam1 max, lam1 and lam2    #
@@ -377,13 +377,13 @@ class SolverFS:
 
         xj_criteria = np.copy(xj)
 
-        # ---------------------------------- #
-        #    relax with linear regression    #
-        # ---------------------------------- #
+        # ----------------------- #
+        #    relax for criteria   #
+        # ----------------------- #
 
         if 0 < r < m and relaxed_criteria:
 
-            xj_criteria = LA.solve(AJ.T @ AJ, AJ.T @ b)
+            xj_criteria = LA.solve(AJ.T @ AJ, AJ.T @ b).reshape(r, k)
 
         # ------------------------------ #
         #    model selection criteria    #
@@ -392,28 +392,30 @@ class SolverFS:
         selection_criterion_value = None
 
         # compute dof
-        df_core = LA.inv(AJ.T @ AJ + lam2 * np.eye(r))
+        df_core = LA.inv(AJ.T @ AJ + lam2 * np.eye(r * k))
         df = np.trace(AJ @ df_core @ AJ.T)
 
         # compute rss
-        rss = LA.norm(b - AJ @ xj_criteria) ** 2
+        rss = LA.norm(b - AJ @ xj_criteria.ravel()) ** 2
 
         if selection_criterion == SelectionCriteria.GCV:
             selection_criterion_value = rss / (m - k * df) ** 2
-            # gcv = rss / (m - k * df) ** 2
+            # selection_criterion_value = r * rss / (m - k * df) ** 2
+            # gcv = rss / (m - df) ** 2
 
         elif selection_criterion == SelectionCriteria.EBIC:
             selection_criterion_value = np.log(rss / m) + df * np.log(m) / m + df * np.log(r + 1e-32) / m
+            # selection_criterion_value = np.log(rss / m) + df * np.log(m) / m + df * np.log(n) / m
             # ebic = np.log(rss / (m * k)) + df * np.log(m * k) / m + df * np.log(n) / m
 
-        # ----------------------------- #
-        #    relaxation for estimates   #
-        # ----------------------------- #
+        # ------------------------ #
+        #    relax for estimates   #
+        # ------------------------ #
 
         if relaxed_estimates and 0 < r < m:
 
             if not relaxed_criteria:
-                xj_criteria = LA.solve(AJ.T @ AJ, AJ.T @ b)
+                xj_criteria = LA.solve(AJ.T @ AJ, AJ.T @ b).reshape(r, k)
 
             x[indx, :] = xj_criteria
 
@@ -427,6 +429,8 @@ class SolverFS:
                 relaxed_print = 'm < r, no relaxation performed'
             else:
                 relaxed_print = relaxed_estimates
+
+        if print_lev > 0:
 
             print('')
             print('  ==================================================')

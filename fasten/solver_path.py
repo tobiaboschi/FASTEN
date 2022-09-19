@@ -1,8 +1,8 @@
 """ class FASTEN
-        solver for different values of c_lam and different regression type
+        fasten for different values of c_lam and different regression type
 
     solver_core: solve the problem for one value of c_lam (lambda)
-    solver: call several times solver_core -- one for each value of lambda -- and performs adaptive step
+    fasten: call several times solver_core -- one for each value of lambda -- and performs adaptive step
 
     INPUT PARAMETERS:
     --------------------------------------------------------------------------------------------------------------------
@@ -24,7 +24,7 @@
         SF: k = 5
     :param wgts: individual weights for the penalty. 1 (default) or np.array with shape (n, 1)
     :param selection_criterion: an object of class SelectionCriteria, it can be CV, GCV, EBIC.
-        The output of the solver will contain the best model according to the chosen criterion.
+        The output of the fasten will contain the best model according to the chosen criterion.
         We recommend to use CV for FC model
     :param n_folds: if selection_criterion is CV, number of folds to compute it. Default = 10
     :param adaptive_scheme: an object of class AdaptiveScheme. It can be NONE, SOFT, FULL.
@@ -135,12 +135,12 @@ import pandas as pd
 from tqdm.auto import tqdm
 from numpy import linalg as LA
 from sklearn.model_selection import KFold
-from solver.solver_FF import SolverFF
-from solver.solver_FC import SolverFC
-from solver.solver_FS import SolverFS
-from solver.auxiliary_functions import RegressionType, SelectionCriteria, AdaptiveScheme
-from solver.auxiliary_functions import AuxiliaryFunctionsFC, AuxiliaryFunctionsFF, AuxiliaryFunctionsFS, AuxiliaryFunctionsSF
-from solver.auxiliary_functions import OutputPath, OutputPathCore, plot_selection_criterion
+from fasten.solver_FF import SolverFF
+from fasten.solver_FC import SolverFC
+from fasten.solver_FS import SolverFS
+from fasten.auxiliary_functions import RegressionType, SelectionCriteria, AdaptiveScheme
+from fasten.auxiliary_functions import AuxiliaryFunctionsFC, AuxiliaryFunctionsFF, AuxiliaryFunctionsFS, AuxiliaryFunctionsSF
+from fasten.auxiliary_functions import OutputPath, OutputPathCore, plot_selection_criterion
 
 
 class FASTEN:
@@ -436,7 +436,7 @@ class FASTEN:
                plot=False, print_lev=1):
 
         # ----------------------------------------------------- #
-        #   initialize solver and auxiliary functions objects   #
+        #   initialize fasten and auxiliary functions objects   #
         # ----------------------------------------------------- #
         # (we set a different k fot estimation just for the FF model)
 

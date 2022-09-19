@@ -19,10 +19,10 @@ if __name__ == '__main__':
     #  choose simulation type  #
     # ------------------------ #
 
-    regression_type = RegressionType.FS
+    regression_type = RegressionType.FS  # FF, FC, SF, FC
     GenSim = GenerateSimFS(seed)
 
-    selection_criterion = SelectionCriteria.EBIC
+    selection_criterion = SelectionCriteria.GCV  # CV, GCV, or EBIC
     n_folds = 5  # number of folds if cv is performed
     adaptive_scheme = AdaptiveScheme.SOFT  # type of adaptive scheme: FULL, SOFT, NONE
 
@@ -36,25 +36,10 @@ if __name__ == '__main__':
 
     m = 300  # number of samples
     n = 500  # number of features
-    not0 = 10  # number of non 0 features
+    not0 = 20  # number of non 0 features
 
     domain = np.array([0, 1])  # domains of the curves
     neval = 100  # number of points to construct the true predictors and the response
-
-    k = None  # number of FPC scores
-
-    if easy_x:
-        # Easy x
-        mu_x = 0  # mean of the true predictors
-        sd_x = 1  # standard deviation of the x Matern covariance
-        l_x = 0.25  # range parameter of x Matern covariance
-        nu_x = 3.5  # smoothness of x Matern covariance
-    else:
-        # Difficult x
-        mu_x = 0  # mean of the true predictors
-        sd_x = 2  # standard deviation of the x Matern covariance
-        l_x = 0.25  # range parameter of x Matern covariance
-        nu_x = 2.5  # smoothness of x Matern covariance
 
     mu_eps = 0  # mean of errors
     snr = 10  # signal to noise ratio to determine sd_eps
@@ -65,12 +50,15 @@ if __name__ == '__main__':
     #  set solver parameters  #
     # ----------------------- #
 
+    k = None  # number of FPC scores, if None automatically selected
+
     # c_lam_vec = 0.8  # if we chose to run for just one value of lam1 = lam1 = c_lam * lam1_max
     c_lam_vec = np.geomspace(1, 0.01, num=100)  # grid of lam1 to explore, lam1 = c_lam * lam1_max
     c_lam_vec_adaptive = np.geomspace(1, 0.0001, num=50)
 
-    # max_selected = max(50, 2 * not0)  # max number of selected features
-    max_selected = 100
+    max_selected = max(50, 2 * not0)  # max number of selected features
+    # max_selected = 100
+    check_selection_criterion = True  # if True and the selection criterion has a discontinuity, we stop the search
 
     wgts = np.ones((n, 1))  # individual penalty weights
     alpha = 0.2  # lam2 = (1-alpha) * c_lam * lam1_max
@@ -94,6 +82,19 @@ if __name__ == '__main__':
     #  create variables  #
     # ------------------ #
 
+    if easy_x:
+        # Easy x
+        mu_x = 0  # mean of the true predictors
+        sd_x = 1  # standard deviation of the x Matern covariance
+        l_x = 0.25  # range parameter of x Matern covariance
+        nu_x = 3.5  # smoothness of x Matern covariance
+    else:
+        # Difficult x
+        mu_x = 0  # mean of the true predictors
+        sd_x = 2  # standard deviation of the x Matern covariance
+        l_x = 0.25  # range parameter of x Matern covariance
+        nu_x = 2.5  # smoothness of x Matern covariance
+
     # create equispaced grid where the curves are evaluated at
     grid = np.linspace(domain[0], domain[1], neval)
 
@@ -106,22 +107,6 @@ if __name__ == '__main__':
     # compute errors and response
     b, eps = GenSim.compute_b_plus_eps(A, x_true, not0, grid, snr, mu_eps, l_eps, nu_eps)
 
-    # ------------ #
-    #  some plots  #
-    # ------------ #
-
-    # # plot errors and b
-    # plt.plot(grid, eps[0, :].T, lw=1)
-    # plt.gca().set_prop_cycle(None)
-    # plt.plot(grid, b[0, :].T, '--')
-    # plt.show()
-
-    # # plot b with and without errors
-    # plt.plot(grid, (b - eps)[0:3, :].T, lw=1)
-    # plt.gca().set_prop_cycle(None)
-    # plt.plot(grid, b[0:3, :].T, '--')
-    # plt.show()
-
     # --------------- #
     #  standardize A  #
     # --------------- #
@@ -131,7 +116,6 @@ if __name__ == '__main__':
     # --------------- #
     #  launch solver  #
     # --------------- #
-
     print('')
     print('  * start fgen')
     print('  * sgm = %.4f' % sgm)
@@ -148,7 +132,7 @@ if __name__ == '__main__':
         adaptive_scheme=adaptive_scheme,
         coefficients_form=False, x_basis=None,
         c_lam_vec=c_lam_vec, c_lam_vec_adaptive=c_lam_vec_adaptive,
-        max_selected=max_selected,
+        max_selected=max_selected, check_selection_criterion=check_selection_criterion,
         alpha=alpha, lam1_max=None,
         x0=None, y0=None, z0=None, Aty0=None,
         relaxed_criteria=relaxed_criteria, relaxed_estimates=relaxed_estimates,
@@ -178,25 +162,14 @@ if __name__ == '__main__':
     xj_curves = out_FS.x_curves
     AJ = A[:, indx]
     b_hat = AJ @ xj_curves
-    resy = b - b_hat
-    MSEy = LA.norm(resy) ** 2 / (m * neval ** 2)
-    MSEy_std2 = np.mean(LA.norm(resy, axis=1) ** 2 / LA.norm(b, axis=1) ** 2)
-    MSEy_std = np.mean(LA.norm(resy, axis=1) / LA.norm(b, axis=1))
-    # MSEy = np.mean(LA.norm(resy, axis=1) ** 2) / neval ** 2
-    # MSEy_std2 = np.mean(LA.norm(resy / neval, axis=1) ** 2 / LA.norm(b / neval, axis=1) ** 2)
+    MSEy = np.mean(LA.norm(b - b_hat, axis=1) ** 2 / LA.norm(b, axis=1) ** 2)
 
     # MSE for x
     resx = x_hat_true_positive - x_true_sub
-    MSEx = LA.norm(resx) ** 2 / (true_positive * neval ** 2)
-    MSEx_std2 = np.mean(LA.norm(resx, axis=1) ** 2 / LA.norm(x_true_sub, axis=1) ** 2)
-    MSEx_std = np.mean(LA.norm(resx, axis=1) / LA.norm(x_true_sub, axis=1))
-    # MSEx = np.mean(LA.norm(resx.reshape(true_positive, neval * neval), axis=1) ** 2) / neval ** 4
-    # MSEx_std2 = np.mean(LA.norm(resx / neval ** 2, axis=1) ** 2 / LA.norm(x_true_sub / neval ** 2, axis=1) ** 2)
+    MSEx = np.mean(LA.norm(resx, axis=1) ** 2 / LA.norm(x_true_sub, axis=1) ** 2)
 
-    print('MSEy_std = %.4f' % MSEy_std)
-    print('MSEy_std2 = %.4f' % MSEy_std2)
-    print('MSEx_std = %f' % MSEx_std)
-    print('MSEx_std2 = %f' % MSEx_std2)
+    print('MSEy = %.4f' % MSEy)
+    print('MSEx = %.4f' % MSEx)
     print('false negatives = ', false_negatives)
     print('false positives = ', false_positives)
 
@@ -204,29 +177,34 @@ if __name__ == '__main__':
     #  plot estimated curves  #
     # ----------------------- #
 
-    # # plot b and b_hat
-    # plt.plot(grid, b[1:5, :].T, lw=1)
-    # plt.gca().set_prop_cycle(None)
-    # plt.plot(grid, b_hat[1:5, :].T, '--')
-    # plt.show()
+    if plot:
+        # plot b and b_hat
+        plt.plot(grid, b[0:5, :].T, lw=1)
+        plt.gca().set_prop_cycle(None)
+        plt.plot(grid, b_hat[0:5, :].T, '--')
+        plt.title('observed (blue) vs fitted (salmon) responses')
+        plt.show()
 
-    # # plot x and x_hat all together
-    # plt.plot(grid, out_FS.x_curves[0:, :].T, lw=1)
-    # plt.gca().set_prop_cycle(None)
-    # plt.plot(grid, x_true[0:, :].T, '--')
-    # plt.show()
+        # plot x and x_hat all together
+        plt.plot(grid, out_FS.x_curves[0:, :].T, lw=1)
+        plt.gca().set_prop_cycle(None)
+        plt.plot(grid, x_true[0:, :].T, '--')
+        plt.title('true (-) vs estimated (--) x')
+        plt.show()
 
-    # # plot x and x_hat one at a time
-    # ind_curve = 0
-    # for i in range(not0):
-    #     if indx[i]:
-    #         plt.plot(grid, out_FS.x_curves[ind_curve, :].T, '--', color='salmon')
-    #         ind_curve += 1
-    #     plt.plot(grid, x_true[i, :].T)
-    #     plt.show()
-    #
-    # for i in range(r):
-    #     if pos_curves[i] > not0:
-    #         plt.plot(grid, out_FS.x_curves[i, :].T, '--', color='salmon')
-    #         plt.show()
+        # # plot x and x_hat one at a time
+        # ind_curve = 0
+        # for i in range(not0):
+        #     if indx[i]:
+        #         plt.plot(grid, out_FS.x_curves[ind_curve, :].T, '--', color='green')
+        #         ind_curve += 1
+        #     plt.plot(grid, x_true[i, :].T)
+        #     plt.title('true (-) vs estimated (--) x')
+        #     plt.show()
+        #
+        # for i in range(r):
+        #     if pos_curves[i] > not0:
+        #         plt.plot(grid, out_FS.x_curves[i, :].T, '--', color='green')
+        #         plt.title('true (-) vs estimated (--) x')
+        #         plt.show()
 

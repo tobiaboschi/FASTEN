@@ -19,8 +19,9 @@
         SF: np.array(m, )
     :param k: number of basis function. If k is not passed to the function, it is selected automatically such that:
         FF: more than 90% of response variability
-        FC, FS: more than 95% of response variability
-        SF: k = 3
+        FC: more than 95% of response variability
+        FS: min(5, more than 99% of response variability)
+        SF: k = 5
     :param wgts: individual weights for the penalty. 1 (default) or np.array with shape (n, 1)
     :param selection_criterion: an object of class SelectionCriteria, it can be CV, GCV, EBIC.
         The output of the solver will contain the best model according to the chosen criterion.
@@ -28,10 +29,10 @@
     :param n_folds: if selection_criterion is CV, number of folds to compute it. Default = 10
     :param adaptive_scheme: an object of class AdaptiveScheme. It can be NONE, SOFT, FULL.
         NONE: no adaptive step is performed
-        SOFT: just one adaptive iteration is performed
+        SOFT (default): just one adaptive iteration is performed
         FULL: a new path is investigated starting from the weights obtained at the previous path
     :param coefficients_form: If TRUE the inputs A and b are already in the coefficients form and x_basis MUST be given.
-        The coefficient form has be obtained as follows:
+        Deafult is False. The coefficient form has be obtained as follows:
         (remember, if g_basis and f_basis orthogonal, then g_basis.T @ f_basis = I)
             For b - with b_scores = b @ b_basis, we have:
                 Function-on-scalar: b_coeff = b_scores @ b_basis.T @ x_basis
@@ -48,7 +49,7 @@
             Scalar-on-scalar: A_basis (all feat) = x_basis (all feat) = FPC of the first features of A
             Concurrent: A_basis = x_basis = FPC of b
             Function-on-function: A_basis = x_basis1 = x_basis2 = FPC of b
-    :param x_basis: if coefficient_form = TRUE, you have to pass the basis function of x.
+    :param x_basis: Default is False. if coefficient_form = TRUE, you have to pass the basis function of x.
         If you use the same basis for all the features then:
             x_basis: (neval x k).
         If you use different basis for each feature, then:
@@ -56,15 +57,19 @@
                 first dimension: x_basis1 and x_basis2, second dimension: basis of each features, and it has to be:
                 x_basis1 = A_basis, x_basis2 = b_basis
             All other models: x_basis is an (n, neval, k) tensor
-    :param c_lam_vec: np.array to determine the path of lambdas.
+    :param c_lam_vec: np.array to determine the path of lambdas. Default: np.geomspace(1, 0.01, num=100)
         If just one number, a single run is performed and the output is in best_models.single_run
         Different regression model and different alpha, may requires longer/shorter grid. We reccomend the
         user to investigate a long grid and maybe use max_selected to stop the search.
     :param c_lam_vec_adaptive: np.array to determine the path of lambdas in the adaptive step.
-        Used if adaptive_scheme = FULL
+        Used if adaptive_scheme = FULL. DEfault: np.geomspace(1, 0.0001, num=50)
     :param max_selected: if given, the algorithm stops when a number of features > max_selected is selected
+        Default is None
+    :param check_selection_criterion: if True and the selection criterion has  a strong discontinuity,
+        we stop the search. If max selected is None or bigger than 80, we suggest to set
+        check_selection_criterion = True. Default is False.
     :param alpha: we have lam1 = alpha * c_lam * lam1_max, lam2 = (1 - alpha) * c_lam * lam1_max
-        We recoomend to use alpha = 0.5 for the FC model.
+        We recoomend to use alpha = 0.5 for the FC model. Default is 0.2
     :param lam1_max: smallest values of lam1 that selects 0 features. If it is None, it is computed inside the function
     :param x0: initial value for the variable of the primal problem -- vector 0 if not given
         FF: np.array((n * k, k))
@@ -76,26 +81,25 @@
         FF: np.array((n * k, k))
         all the others: np.array((n, k))
     :param Aty0: A.T @ y0
-    :param select_k_estimation: used just if regression_type = FF.
+    :param select_k_estimation: used just if regression_type = FF. Default is True.
         If true, k can change after the selection and before the surfaces' estimation (chosen based on CV)
     :param relaxed_criteria: if True a linear regression is fitted on the selected features before computing
-        the selection criterion
-    :param relaxed_estimates: if True a linear regression is fitted on the features to produce the final estimates
-        We suggest to set relaxed_criteria = relaxed_estimates = True
+        the selection criterion. Default is True
+    :param relaxed_estimates: if True a linear regression is fitted on the features to produce the final estimates.
+        Default is True. We suggest to set relaxed_criteria = relaxed_estimates = True
         If adaptive_scheme = FULL, relaxed_estimates and relaxed_criteria are forced to be False
         (the weights already are a relaxation of the estimates)
-    :param sgm: starting value of the augmented lagrangian parameter sigma
-    :param sgm_increase: increasing factor of sigma
-    :param sgm_change: we increase sgm -- sgm *= sgm_increase -- every sgm_change iterations
-    :param tol_nwt: tolerance for the nwt algorithm
-    :param tol_dal: global tolerance of the dal algorithm
-    :param tol_adaptive: tolerance of the iterative adaptive step (used if adaptive is True)
-    :param maxiter_nwt: maximum number of iterations for nwt
-    :param maxiter_dal: maximum number of global iterations
-    :param maxiter_adaptive: maximum number of the adaptive step iterations (used if adaptive is True)
-    :param use_cg: True/False. If true, the conjugate gradient method is used to find the direction of the nwt
-    :param r_exact: number of features such that we start using the exact method
-    :param plot: True/False. If true a plot of r, gcv, extended bic and cv (if cv == True) is displayed
+    :param sgm: starting value of the augmented lagrangian parameter sigma. Default is 5e-3
+    :param sgm_increase: increasing factor of sigma.  Default is 5.
+    :param sgm_change: we increase sgm -- sgm *= sgm_increase -- every sgm_change iterations. Default is 1
+    :param tol_nwt: tolerance for the nwt algorithm. Default is 1e-6
+    :param tol_dal: global tolerance of the dal algorithm. Default is 1e-6
+    :param maxiter_nwt: maximum number of iterations for nwt. Default is 50
+    :param maxiter_dal: maximum number of global iterations. Default is 100
+    :param use_cg: True/False. If true, the conjugate gradient method is used to find the direction of the nwt.
+        Dfault is False
+    :param r_exact: number of features such that we start using the exact method. Default is 2e4
+    :param plot: True/False. If true a plot of r, gcv, extended bic and cv (if cv == True) is displayed.
     :param print_lev: different level of printing (0, 1, 2, 3, 4)
     --------------------------------------------------------------------------------------------------------------------
 
@@ -148,6 +152,7 @@ class FASTEN:
                     selection_criterion=SelectionCriteria.GCV,
                     relaxed_criteria=False, relaxed_estimates=False,
                     n_folds=10, max_selected=None,
+                    check_selection_criterion=False,
                     sgm=1e-2, sgm_increase=5, sgm_change=3,
                     tol_nwt=1e-6, tol_dal=1e-6,
                     maxiter_nwt=50, maxiter_dal=100,
@@ -249,13 +254,13 @@ class FASTEN:
 
                 if found_1st_model:
 
-                    # # if the jump between two steps is too high, stop the search
-                    # if (selection_criterion != SelectionCriteria.CV and
-                    #         np.abs((fit.selection_criterion_value - selection_criterion_vec[i-1]) /
-                    #                min(selection_criterion_vec[i], selection_criterion_vec[i-1])) > 5 and
-                    #         fit.r > 10):
-                    #     n_iter = i - 1
-                    #     break
+                    # if the jump between two steps is too high, stop the search
+                    if (check_selection_criterion and selection_criterion != SelectionCriteria.CV and
+                            np.abs((fit.selection_criterion_value - selection_criterion_vec[i-1]) /
+                                   min(selection_criterion_vec[i], selection_criterion_vec[i-1])) > 5 and
+                            fit.r > 5):
+                        n_iter = i - 1
+                        break
 
                     if fit.selection_criterion_value < best_model.selection_criterion_value:
                         best_model = fit
@@ -379,12 +384,13 @@ class FASTEN:
             selection_criterion_vec = cv_mat.mean(1) / m
 
             # check there are jumps too large in the cv criterion
-            for i in range(1, n_iter):
-                if np.abs((selection_criterion_vec[i] - selection_criterion_vec[i-1]) /
-                          min(selection_criterion_vec[i], selection_criterion_vec[i-1])) > 1:
-                    n_iter = i - 1
-                    selection_criterion_vec = selection_criterion_vec[:n_iter]
-                    break
+            if check_selection_criterion:
+                for i in range(1, n_iter):
+                    if np.abs((selection_criterion_vec[i] - selection_criterion_vec[i-1]) /
+                              min(selection_criterion_vec[i], selection_criterion_vec[i-1])) > 1:
+                        n_iter = i - 1
+                        selection_criterion_vec = selection_criterion_vec[:n_iter]
+                        break
 
             # find first best r different from 0
             ok_pos = r_vec[0:n_iter] > 0
@@ -415,14 +421,15 @@ class FASTEN:
     def solver(self, regression_type,
                A, b, k=None, wgts=1,
                selection_criterion=SelectionCriteria.GCV, n_folds=10,
-               adaptive_scheme=AdaptiveScheme.NONE,
+               adaptive_scheme=AdaptiveScheme.SOFT,
                coefficients_form=False, x_basis=None,
-               c_lam_vec=None, c_lam_vec_adaptive=None, max_selected=None,
-               alpha=None, lam1_max=None,
+               c_lam_vec=None, c_lam_vec_adaptive=None,
+               max_selected=None, check_selection_criterion=False,
+               alpha=0.2, lam1_max=None,
                x0=None, y0=None, z0=None, Aty0=None,
-               select_k_estimation=False,
-               relaxed_criteria=False, relaxed_estimates=False,
-               sgm=5e-3, sgm_increase=5, sgm_change=3,
+               select_k_estimation=True,
+               relaxed_criteria=True, relaxed_estimates=True,
+               sgm=5e-3, sgm_increase=5, sgm_change=1,
                tol_nwt=1e-6, tol_dal=1e-6,
                maxiter_nwt=50, maxiter_dal=100,
                use_cg=False, r_exact=2e4,
@@ -585,6 +592,7 @@ class FASTEN:
                                relaxed_criteria=relaxed_criteria,
                                relaxed_estimates=relaxed_estimates,
                                n_folds=n_folds, max_selected=max_selected,
+                               check_selection_criterion=check_selection_criterion,
                                sgm=sgm, sgm_increase=sgm_increase, sgm_change=sgm_change,
                                tol_nwt=tol_nwt, tol_dal=tol_dal,
                                maxiter_nwt=maxiter_nwt, maxiter_dal=maxiter_dal,
@@ -699,6 +707,7 @@ class FASTEN:
                                             relaxed_criteria=relaxed_criteria_adaptive,
                                             relaxed_estimates=relaxed_estimates_adaptive,
                                             n_folds=n_folds, max_selected=max_selected,
+                                            check_selection_criterion=False,
                                             sgm=sgm, sgm_increase=sgm_increase, sgm_change=sgm_change,
                                             tol_nwt=tol_nwt, tol_dal=tol_dal,
                                             maxiter_nwt=maxiter_nwt, maxiter_dal=maxiter_dal,

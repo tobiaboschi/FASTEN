@@ -435,99 +435,99 @@ if __name__ == '__main__':
     #         ax.set_zlim(x_range)
     #         plt.show()
 
-    how_many = 5
-    plt.figure()
-    sns.set_theme()
-    sns.set_style("ticks")
-    size = 14
-    plt.rcParams.update({'font.size': size,
-                            'axes.labelsize': size+2,
-                            'axes.titlesize': size+2,
-                            'xtick.labelsize':size,
-                            'ytick.labelsize':size})
-    # plt.figure(figsize=(6,4))
-    plt.plot(grid, b_hat_out[0:how_many, :].T, lw=2)
-    plt.gca().set_prop_cycle(None)
-    plt.plot(grid, b_test[0:how_many, :].T, '--')
-    # plt.xticks(rotation=45, fontsize='xx-small', rotation_mode='anchor')
-    # plt.ylabel('Response', fontsize=15)
-    # plt.title('Response and errors', fontsize=15)
-    line = plt.Line2D([0,1],[0,1],linestyle='-', color='grey')
-    line2 = plt.Line2D([0,1],[0,1],linestyle='--', color='grey')
-    plt.legend([line, line2],['Estimated curve', 'Observed curve'], loc='upper left')
-    # plt.show()
-    plt.savefig('out_of_sample_prediction.pdf', bbox_inches="tight", transparent=True)
+    # how_many = 5
+    # plt.figure()
+    # sns.set_theme()
+    # sns.set_style("ticks")
+    # size = 14
+    # plt.rcParams.update({'font.size': size,
+    #                         'axes.labelsize': size+2,
+    #                         'axes.titlesize': size+2,
+    #                         'xtick.labelsize':size,
+    #                         'ytick.labelsize':size})
+    # # plt.figure(figsize=(6,4))
+    # plt.plot(grid, b_hat_out[0:how_many, :].T, lw=2)
+    # plt.gca().set_prop_cycle(None)
+    # plt.plot(grid, b_test[0:how_many, :].T, '--')
+    # # plt.xticks(rotation=45, fontsize='xx-small', rotation_mode='anchor')
+    # # plt.ylabel('Response', fontsize=15)
+    # # plt.title('Response and errors', fontsize=15)
+    # line = plt.Line2D([0,1],[0,1],linestyle='-', color='grey')
+    # line2 = plt.Line2D([0,1],[0,1],linestyle='--', color='grey')
+    # plt.legend([line, line2],['Estimated curve', 'Observed curve'], loc='upper left')
+    # # plt.show()
+    # plt.savefig('out_of_sample_prediction.pdf', bbox_inches="tight", transparent=True)
 
 
-    plt.figure()
-    sns.set_theme()
-    sns.set_style("ticks")
-    size = 14
-    plt.rcParams.update({'font.size': size,
-                            'axes.labelsize': size+2,
-                            'axes.titlesize': size+2,
-                            'xtick.labelsize':size,
-                            'ytick.labelsize':size})
-    # plt.figure(figsize=(6,4))
-    plt.plot(grid, (b_test-eps_test)[0:how_many, :].T, lw=2)
-    plt.gca().set_prop_cycle(None)
-    #plt.plot(grid, b[0:5, :].T, '--')
-    #plt.xticks(rotation=45, fontsize='xx-small', rotation_mode='anchor')
-    #plt.ylabel('Response', fontsize=15)
-    #plt.title('Response and errors', fontsize=15)
-    #line = plt.Line2D([0,1],[0,1],linestyle='-', color='grey')
-    #line2 = plt.Line2D([0,1],[0,1],linestyle='--', color='grey')
-    #plt.legend([line, line2],['True signal', 'Observed curve'], loc='upper left')
-    plt.savefig('true_signal.pdf', bbox_inches="tight", transparent=True)
+    # plt.figure()
+    # sns.set_theme()
+    # sns.set_style("ticks")
+    # size = 14
+    # plt.rcParams.update({'font.size': size,
+    #                         'axes.labelsize': size+2,
+    #                         'axes.titlesize': size+2,
+    #                         'xtick.labelsize':size,
+    #                         'ytick.labelsize':size})
+    # # plt.figure(figsize=(6,4))
+    # plt.plot(grid, (b_test-eps_test)[0:how_many, :].T, lw=2)
+    # plt.gca().set_prop_cycle(None)
+    # #plt.plot(grid, b[0:5, :].T, '--')
+    # #plt.xticks(rotation=45, fontsize='xx-small', rotation_mode='anchor')
+    # #plt.ylabel('Response', fontsize=15)
+    # #plt.title('Response and errors', fontsize=15)
+    # #line = plt.Line2D([0,1],[0,1],linestyle='-', color='grey')
+    # #line2 = plt.Line2D([0,1],[0,1],linestyle='--', color='grey')
+    # #plt.legend([line, line2],['True signal', 'Observed curve'], loc='upper left')
+    # plt.savefig('true_signal.pdf', bbox_inches="tight", transparent=True)
 
 
-    plt.figure()
-    sns.set_theme()
-    sns.set_style("ticks")
-    size = 14
-    plt.rcParams.update({'font.size': size,
-                            'axes.labelsize': size+2,
-                            'axes.titlesize': size+2,
-                            'xtick.labelsize':size,
-                            'ytick.labelsize':size})
-    # plt.figure(figsize=(6,4))
-    plt.plot(grid, (eps_test)[0:how_many, :].T, lw=2)
-    plt.gca().set_prop_cycle(None)
-    #plt.plot(grid, b[0:5, :].T, '--')
-    #plt.xticks(rotation=45, fontsize='xx-small', rotation_mode='anchor')
-    #plt.ylabel('Response', fontsize=15)
-    #plt.title('Response and errors', fontsize=15)
-    #line = plt.Line2D([0,1],[0,1],linestyle='-', color='grey')
-    #line2 = plt.Line2D([0,1],[0,1],linestyle='--', color='grey')
-    #plt.legend([line, line2],['True signal', 'Observed curve'], loc='upper left')
-    plt.savefig('error.pdf', bbox_inches="tight", transparent=True)
+    # plt.figure()
+    # sns.set_theme()
+    # sns.set_style("ticks")
+    # size = 14
+    # plt.rcParams.update({'font.size': size,
+    #                         'axes.labelsize': size+2,
+    #                         'axes.titlesize': size+2,
+    #                         'xtick.labelsize':size,
+    #                         'ytick.labelsize':size})
+    # # plt.figure(figsize=(6,4))
+    # plt.plot(grid, (eps_test)[0:how_many, :].T, lw=2)
+    # plt.gca().set_prop_cycle(None)
+    # #plt.plot(grid, b[0:5, :].T, '--')
+    # #plt.xticks(rotation=45, fontsize='xx-small', rotation_mode='anchor')
+    # #plt.ylabel('Response', fontsize=15)
+    # #plt.title('Response and errors', fontsize=15)
+    # #line = plt.Line2D([0,1],[0,1],linestyle='-', color='grey')
+    # #line2 = plt.Line2D([0,1],[0,1],linestyle='--', color='grey')
+    # #plt.legend([line, line2],['True signal', 'Observed curve'], loc='upper left')
+    # plt.savefig('error.pdf', bbox_inches="tight", transparent=True)
 
 
-    sns.set_theme()
-    sns.set_style("ticks")
-    size = 14
-    plt.rcParams.update({'font.size': size,
-                            'axes.labelsize': size+2,
-                            'axes.titlesize': size+2,
-                            'xtick.labelsize':size,
-                            'ytick.labelsize':size})
-    ind_curve = 0
-    for i in range(1):
-        fig = plt.figure()
-        ax = plt.axes(projection='3d')
-        ax.set_zlim(x_range)
-        if indx[i]:
-            ax.plot_wireframe(grid_expanded, grid_expanded.T, out_FF.x_curves[ind_curve, :, :],
-                              color='salmon', alpha=0.3)
-            ind_curve += 1
-        plt.savefig('sim_coef_est'+str(i)+'.pdf', bbox_inches="tight", transparent=True)
-    
-        fig = plt.figure()
-        ax = plt.axes(projection='3d')
-        ax.set_zlim(x_range)
-        ax.plot_wireframe(grid_expanded, grid_expanded.T, x_true[i, :, :],
-                           alpha=0.3)
-        plt.savefig('sim_coef_true'+str(i)+'.pdf', bbox_inches="tight", transparent=True)
+    # sns.set_theme()
+    # sns.set_style("ticks")
+    # size = 14
+    # plt.rcParams.update({'font.size': size,
+    #                         'axes.labelsize': size+2,
+    #                         'axes.titlesize': size+2,
+    #                         'xtick.labelsize':size,
+    #                         'ytick.labelsize':size})
+    # ind_curve = 0
+    # for i in range(1):
+    #     fig = plt.figure()
+    #     ax = plt.axes(projection='3d')
+    #     ax.set_zlim(x_range)
+    #     if indx[i]:
+    #         ax.plot_wireframe(grid_expanded, grid_expanded.T, out_FF.x_curves[ind_curve, :, :],
+    #                           color='salmon', alpha=0.3)
+    #         ind_curve += 1
+    #     plt.savefig('sim_coef_est'+str(i)+'.pdf', bbox_inches="tight", transparent=True)
+    #
+    #     fig = plt.figure()
+    #     ax = plt.axes(projection='3d')
+    #     ax.set_zlim(x_range)
+    #     ax.plot_wireframe(grid_expanded, grid_expanded.T, x_true[i, :, :],
+    #                        alpha=0.3)
+    #     plt.savefig('sim_coef_true'+str(i)+'.pdf', bbox_inches="tight", transparent=True)
 
 
     # plt.plot(my_range, rss_cv)

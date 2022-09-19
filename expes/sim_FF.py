@@ -23,7 +23,7 @@ if __name__ == '__main__':
     regression_type = RegressionType.FF  # FF, FC, SF, FC
     GenSim = GenerateSimFF(seed)
 
-    selection_criterion = SelectionCriteria.GCV  # CV, GCV, or EBIC
+    selection_criterion = SelectionCriteria.CV  # CV, GCV, or EBIC
     n_folds = 5  # number of folds if cv is performed
     adaptive_scheme = AdaptiveScheme.SOFT  # type of adaptive scheme: FULL, SOFT, NONE
 
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     m = 300  # number of samples
     n = 500  # number of features
-    not0 = 5  # number of non 0 features
+    not0 = 10  # number of non 0 features
 
     domain = np.array([0, 1])  # domains of the curves
     neval = 100  # number of points to construct the true predictors and the response

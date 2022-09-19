@@ -12,7 +12,7 @@ from solver.generate_sim import GenerateSimFC
 if __name__ == '__main__':
 
     # seed = np.random.randint(0, 1e5)
-    seed = 54
+    seed = 20
     # np.random.seed(seed)
 
     # ------------------------ #
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     regression_type = RegressionType.FC  # FF, FC, SF, FC
     GenSim = GenerateSimFC(seed)
 
-    selection_criterion = SelectionCriteria.GCV  # CV, GCV, or EBIC
+    selection_criterion = SelectionCriteria.CV  # CV, GCV, or EBIC
     n_folds = 5  # number of folds if cv is performed
     adaptive_scheme = AdaptiveScheme.SOFT  # type of adaptive scheme: FULL, SOFT, NONE
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     m = 300  # number of samples
     n = 500  # number of features
-    not0 = 10  # number of non 0 features
+    not0 =10  # number of non 0 features
 
     domain = np.array([0, 1])  # domains of the curves
     neval = 100  # number of points to construct the true predictors and the response

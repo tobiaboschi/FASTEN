@@ -214,14 +214,14 @@ if __name__ == '__main__':
             if indx[i]:
                 ax.plot_wireframe(grid_expanded, grid_expanded.T, out_FF.x_curves[ind_curve, :, :],
                                   color='salmon', alpha=0.3)
-                ax.set_title('true surface')
+                ax.set_title('estimated surface')
                 ind_curve += 1
 
             ax = fig.add_subplot(1, 2, 2, projection='3d')
             ax.set_zlim(x_range)
             ax.plot_wireframe(grid_expanded, grid_expanded.T, x_true[i, :, :],
                               alpha=0.3)
-            ax.set_title('estimated surface')
+            ax.set_title('true surface')
             plt.show()
 
         for i in range(r):
@@ -231,7 +231,7 @@ if __name__ == '__main__':
                 ax.set_zlim(x_range)
                 ax.plot_wireframe(grid_expanded, grid_expanded.T, out_FF.x_curves[i, :, :],
                                   color='salmon', alpha=0.3)
-                ax.set_title('true surface')
+                ax.set_title('estimated surface')
                 ax = fig.add_subplot(1, 2, 2, projection='3d')
                 ax.set_zlim(x_range)
                 plt.show()

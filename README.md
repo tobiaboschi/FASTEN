@@ -75,7 +75,7 @@ THE CODE FOLLOWS A NOTATION DIFFERENT FROM THE ONE OF THE PAPER. It follows the 
     m: number of observations
     n: number of features 
     k: number of elements in each group
-    A: desing matrix
+    A: design matrix
     b: response matrix
     x: coefficient matrix
     y: dual variable 1

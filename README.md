@@ -219,7 +219,6 @@ THE CODE FOLLOWS A NOTATION DIFFERENT FROM THE ONE OF THE PAPER. It follows the 
 
     OUTPUT: OutputPath object with the following attributes
     ----------------------------------------------------------------------------------------------------------------------------------
-    
     :attribute best_model: 
         an OutputSolver object containing the best model according to the chosen selection criterion. It has the following attributes: 
             --------------------------------------------------------------------------------------------------------------------------

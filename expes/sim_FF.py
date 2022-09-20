@@ -37,7 +37,7 @@ if __name__ == '__main__':
     # ----------------------------- #
 
     m = 300  # number of samples
-    n = 8000  # number of features
+    n = 500  # number of features
     not0 = 10  # number of non 0 features
 
     domain = np.array([0, 1])  # domains of the curves

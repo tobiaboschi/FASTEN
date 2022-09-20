@@ -156,7 +156,7 @@
     :attribute time_path: time to compute the solution path
     :attribute time_cv: time to perform cross validation
     :attribute time_adaptive: time to perform the adaptive step
-    :attribute time_curves: total times to compute the final estimated curves/surfaces from the basis coefficients
+    :attribute time_curves: time to compute the final estimated curves/surfaces from the basis coefficients
     :attribute iters_vec: array, iteration to converge for each value of c_lam
     :attribute times_vec: array, time to compute the solution for each value of c_lam
     --------------------------------------------------------------------------------------------------------------------

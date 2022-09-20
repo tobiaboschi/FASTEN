@@ -283,7 +283,7 @@ THE CODE FOLLOWS A NOTATION DIFFERENT FROM THE ONE OF THE PAPER. It follows the 
     
     :return time_adaptive: time to perform the adaptive step
     
-    :return time_curves: total times to compute the final estimated curves/surfaces from the basis coefficients
+    :return time_curves: time to compute the final estimated curves/surfaces from the basis coefficients
     
     :return iters_vec: array, iteration to converge for each value of c_lam
     

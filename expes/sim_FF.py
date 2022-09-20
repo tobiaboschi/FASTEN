@@ -37,7 +37,7 @@ if __name__ == '__main__':
     # ----------------------------- #
 
     m = 300  # number of samples
-    n = 500  # number of features
+    n = 8000  # number of features
     not0 = 10  # number of non 0 features
 
     domain = np.array([0, 1])  # domains of the curves
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     tol_nwt = 1e-6  # nwt tolerance
     tol_dal = 1e-6  # dal tolerance
 
-    plot = True  # plot selection criteria
+    plot = False  # plot selection criteria
     print_lev = 2  # decide level of printing
 
     # ------------------ #

@@ -82,7 +82,7 @@ if __name__ == '__main__':
     tol_nwt = 1e-6  # nwt tolerance
     tol_dal = 1e-6  # dal tolerance
 
-    plot = False  # plot selection criteria
+    plot = True  # plot selection criteria
     print_lev = 2  # decide level of printing
 
     # ------------------ #

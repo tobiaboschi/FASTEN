@@ -421,7 +421,7 @@ class FASTEN:
             if check_selection_criterion:
                 for i in range(1, n_iter):
                     if np.abs((selection_criterion_vec[i] - selection_criterion_vec[i-1]) /
-                              min(selection_criterion_vec[i], selection_criterion_vec[i-1])) > 1:
+                              min(selection_criterion_vec[i], selection_criterion_vec[i-1])) > 1.5:
                         n_iter = i - 1
                         selection_criterion_vec = selection_criterion_vec[:n_iter]
                         break

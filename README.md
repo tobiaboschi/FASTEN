@@ -70,7 +70,7 @@ TO RUN THE CODE:
 
 
 
-THE CODE FOLLOWS A NOTATION DIFFERENT FROM THE ONE OF THE PAPER. It follows the notation of the majority of optimization sofwtares:
+THE CODE FOLLOWS A NOTATION DIFFERENT FROM THE ONE OF THE PAPER. It follows the notation of the majority of optimization softwares:
 
     m: number of observations
     n: number of features 

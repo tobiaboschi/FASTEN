@@ -31,24 +31,24 @@
         NONE: no adaptive step is performed
         SOFT (default): just one adaptive iteration is performed
         FULL: a new path is investigated starting from the weights obtained at the previous path
-    :param coefficients_form: If TRUE the inputs A and b are already in the coefficients form and x_basis MUST be given.
+    ::param coefficients_form: If TRUE the inputs A and b are already in the coefficients form and x_basis MUST be given.
         Deafult is False. The coefficient form has be obtained as follows:
         (remember, if g_basis and f_basis orthogonal, then g_basis.T @ f_basis = I)
             For b - with b_scores = b @ b_basis, we have:
-                Function-on-scalar: b_coeff = b_scores @ b_basis.T @ x_basis
-                Scalar-on-function: b_coeff = b
-                Concurrent: b_coeff = integral(b)
-                Function-on-function: b_coeff = b_scores @ b_basis.T @ x_basis2
+                FS: b_coeff = b_scores @ b_basis.T @ x_basis
+                SF: b_coeff = b
+                FC: b_coeff = integral(b)
+                FF: b_coeff = b_scores @ b_basis.T @ x_basis2
             For A - with A_scores = A @ A_basis, we have:
-                Function-on-scalar: A_coeff = A
-                Scalar-on-function: A_coeff = A_scores @ A_basis.T @ x_basis
-                Concurrent: A_coeff = A_scores @ A_basis.T @ x_basis
-                Function-on-function: A_coeff = A_scores @ A_basis.T @ x_basis1
+                FS: A_coeff = A
+                SF: A_coeff = A_scores @ A_basis.T @ x_basis
+                FC: A_coeff = A_scores @ A_basis.T @ x_basis
+                FF: A_coeff = A_scores @ A_basis.T @ x_basis1
         If FALSE the coefficients form is automatically computed using the following basis
-            Function-on-scalar: b_basis = x_basis = FPC of b
-            Scalar-on-scalar: A_basis (all feat) = x_basis (all feat) = FPC of the first features of A
-            Concurrent: A_basis = x_basis = FPC of b
-            Function-on-function: A_basis = x_basis1 = x_basis2 = FPC of b
+            FS: b_basis = x_basis = FPC of b
+            SF: A_basis (all feat) = x_basis (all feat) = FPC of the first features of A
+            FC: A_basis = x_basis = FPC of b
+            FF: A_basis = x_basis1 = x_basis2 = FPC of b
     :param x_basis: Default is False. if coefficient_form = TRUE, you have to pass the basis function of x.
         If you use the same basis for all the features then:
             x_basis: (neval x k).
@@ -105,26 +105,60 @@
 
     OUTPUT: OutputPath object with the following attributes
     --------------------------------------------------------------------------------------------------------------------
-    :return best_model: an OutputSolver object, containing the best model according to the chosen selection criterion
-    :return k_selection: k used fot the feature selection
-    :return k_estimation: k used fot the feature estimation. It can be different from k_selection, only in the FF
+    :attribute best_model:
+        an OutputSolver object containing the best model according to the chosen selection criterion. It has the
+        following attributes:
+            ------------------------------------------------------------------------------------------------------------
+            :attribute x_curves: curves computed just for the not 0 estimated coefficients
+                FF: x_basis1 @ x_scores @ x_basis2.T, np.array((r, neval, neval))
+                FS, FC, SF: x_curves = x_scores @ x_basis.T,  np.array((r, neval))
+                They are returned as None by this function then and computed for the best models in path_solver
+            :attribute x_coeffs: standardized estimated coefficients. They are estimated based on:
+                (b - b.mean) / b.std()
+                FS, FC, SF: np.array((n, k))
+                FF: np.array((n, k, k))
+            :attribute x_basis: they are returned as None by this function then inserted in path_solver
+            :attribute b_coeffs: coefficient form of b
+                FS, FF, FC: np.array((m, k))
+                SF: np.array(m, ), same as b, but standardized
+            :attribute A_coeffs: coefficient form of A
+                FS: np.array((m, n))
+                FF, SF, FC: np.array((n, m, k))
+            :attribute y: optimal value of the first dual variable
+            :attribute z: optimal value of the second dual variable
+            :attribute r: number of selected features (after adaptive step if it is performed)
+            :attribute r_no_adaptive: number of selected features before adaptive step. None if adaptive is not performed
+            :attribute indx: position of the selected features
+            :attribute selection_criterion_value: value of the chosen selected criterion
+            :attribute sgm: final value of the augmented lagrangian parameter sigma
+            :attribute c_lam: specifc c_lam value used for the returned model
+            :attribute alpha: same as input
+            :attribute lam1_max: same as input
+            :attribute lam1: specifc lasso penalization value used for the returned model
+            :attribute lam2: specifc ridge penalization value used for the returned model
+            :attribute time: total time of dal
+            :attribute iters: total dal's iteration
+            :attribute Aty: np.dot(A.T(), y) computed at the optimal y. Useful to implement warmstart
+            :attribute convergence: True/False. If false the algorithm has not converged
+            ------------------------------------------------------------------------------------------------------------
+    :attribute k_selection: k used fot the feature selection
+    :attribute k_estimation: k used fot the feature estimation. It can be different from k_selection, only in the FF
         regression model if select_k_estimation = TRUE
-    :return r_vec: np.array, number of selected features for each value of c_lam
-    :return selection_criterion_vec: np.array, value of the selection criterion for each value of c_lam
-    :return c_lam_entry_value: np.array, contatains the c_lam value for which each selected feature entered in the model
-    :return c_lam_vec: np.array, vector containing all the values of c_lam
-    :return alpha: same as input
-    :return lam1_vec: np.array, lasso penalization for each value of c_lam
-    :return lam2_vec: np.array, ridge penalization for each value of c_lam
-    :return lam1_max: same as input
-    :return time_total: total time of FAStEN
-    :return time_path: time to compute the solution path
-    :return time_cv: time to perform cross validation
-    :return time_adaptive: time to perform the adaptive step
-    :return time_curves: total times to compute the final estimated curves/surfaces from the basis coefficients
-    :return iters_vec: array, iteration to converge for each value of c_lam
-    :return times_vec: array, time to compute the solution for each value of c_lam
-
+    :attribute r_vec: np.array, number of selected features for each value of c_lam
+    :attribute selection_criterion_vec: np.array, value of the selection criterion for each value of c_lam
+    :attribute c_lam_entry_value: np.array, contains the c_lam value for which each selected feature entered the model
+    :attribute c_lam_vec: np.array, vector containing all the values of c_lam
+    :attribute alpha: same as input
+    :attribute lam1_vec: np.array, lasso penalization for each value of c_lam
+    :attribute lam2_vec: np.array, ridge penalization for each value of c_lam
+    :attribute lam1_max: same as input
+    :attribute time_total: total time of FAStEN
+    :attribute time_path: time to compute the solution path
+    :attribute time_cv: time to perform cross validation
+    :attribute time_adaptive: time to perform the adaptive step
+    :attribute time_curves: total times to compute the final estimated curves/surfaces from the basis coefficients
+    :attribute iters_vec: array, iteration to converge for each value of c_lam
+    :attribute times_vec: array, time to compute the solution for each value of c_lam
     --------------------------------------------------------------------------------------------------------------------
 
 """

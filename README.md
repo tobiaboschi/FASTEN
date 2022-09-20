@@ -1,7 +1,7 @@
 # FASTEN
 Functional Adaptive Feature Selection with Elastic-Net penalty
 
-The repo contains the code to perform functional feature selection usinf a Dual Augmented Lagrangian (DAL) algorithm. The methods are presented in the following papers: REMEMBER TO ADD PAPERS 
+The repo contains the code to perform functional feature selection using a Dual Augmented Lagrangian (DAL) algorithm. The methods are presented in the following papers: REMEMBER TO ADD PAPERS 
 
 
 FILES DESCRIPTION:

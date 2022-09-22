@@ -265,8 +265,13 @@ class SolverFC:
                 print('   -------------------------------------------------------------------')
 
             if not convergence_nwt:
-                print('\n \n')
-                print('  * nwt DOES NOT CONVERGE: try to increase the number of nwt iterations or to reduce the lambdas')
+                print('\n')
+                print('  * NEWTON DOES NOT CONVERGE -- try to: ' '\n'
+                      '    - increase Newton tolerance' '\n'
+                      '    - start from smaller sgm0' '\n'
+                      '    - increase the value of alpha' '\n'
+                      '    - use print_lev = 7 to see all details')
+                print('\n')
                 break
 
             # ---------------------- #

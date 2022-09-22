@@ -89,10 +89,12 @@
         Default is True. We suggest to set relaxed_criteria = relaxed_estimates = True
         If adaptive_scheme = FULL, relaxed_estimates and relaxed_criteria are forced to be False
         (the weights already are a relaxation of the estimates)
+    WARNING: if relaxed_criteria or relaxed_estimate = True, for some CV folds LA.solve(AJ.T @ AJ, AJ.T @ b)
+        may be singular: relaxed_criteria or relaxed_estimate or do not use CV
     :param sgm: starting value of the augmented lagrangian parameter sigma. Default is 5e-3
     :param sgm_increase: increasing factor of sigma.  Default is 5.
     :param sgm_change: we increase sgm -- sgm *= sgm_increase -- every sgm_change iterations. Default is 1
-    :param tol_nwt: tolerance for the nwt algorithm. Default is 1e-6
+    :param tol_nwt: tolerance for the nwt algorithm. Default is 1e-5
     :param tol_dal: global tolerance of the dal algorithm. Default is 1e-6
     :param maxiter_nwt: maximum number of iterations for nwt. Default is 50
     :param maxiter_dal: maximum number of global iterations. Default is 100
@@ -187,8 +189,8 @@ class FASTEN:
                     relaxed_criteria=False, relaxed_estimates=False,
                     n_folds=10, max_selected=None,
                     check_selection_criterion=False,
-                    sgm=1e-2, sgm_increase=5, sgm_change=3,
-                    tol_nwt=1e-6, tol_dal=1e-6,
+                    sgm=1e-2, sgm_increase=5, sgm_change=1,
+                    tol_nwt=1e-5, tol_dal=1e-6,
                     maxiter_nwt=50, maxiter_dal=100,
                     use_cg=False, r_exact=2e4,
                     print_lev=1):
@@ -444,10 +446,10 @@ class FASTEN:
 
             time_cv = time.time() - start_cv
 
-        if not convergence:
-            print('-----------------------------------------------------------------------')
-            print(' dal has not converged for c_lam = %.2f' % c_lam_vec[i])
-            print('-----------------------------------------------------------------------')
+        # if not convergence:
+        #     print('-----------------------------------------------------------------------')
+        #     print(' dal has not converged for c_lam = %.2f' % c_lam_vec[i])
+        #     print('-----------------------------------------------------------------------')
 
         return OutputPathCore(best_model, time_path, time_cv, r_vec[:n_iter], c_lam_entry_value,
                               times_vec[:n_iter], iters_vec[:n_iter], selection_criterion_vec[:n_iter], convergence)

@@ -192,8 +192,8 @@ class SolverFF:
                     #    standard case    #
                     # ------------------- #
 
-                    if m <= r:
                     # if (r * k**4 * (k**2 + r**2 + m**2 + r * n * k)) > (m * k**4 * (r**2 + m**2 + m * r)):
+                    if m <= r:
 
                         #     if (r * k**4 * (k**2 + r**2 + m**2 + r * n * k)) < (m * k**4 * (r**2 + m**2 + m * r)):
                         #         print('WRONG: classic but should be woodbury')
@@ -249,7 +249,6 @@ class SolverFF:
                 # --------------------------- #
 
                 if r > 0:
-                    # kkt1 = np.sum(LA.norm(AJ @ x_temp[indx_krep, :] - b - y, axis=1)) / (1 + np.sum(LA.norm(b, axis=1)))
                     kkt1 = (np.sum(LA.norm(AJ @ x_temp[indx_krep, :] - b - y, axis=1)) /
                             (1 + np.sum(LA.norm(b, axis=1)) +
                              np.sum(LA.norm(x_temp[indx_krep, :].reshape(r, k * k), axis=1))))
@@ -279,8 +278,13 @@ class SolverFF:
                 print('   -------------------------------------------------------------------')
 
             if not convergence_nwt:
-                print('\n \n')
-                print('  * nwt DOES NOT CONVERGE: try to increase the number of nwt iterations or to reduce the lambdas')
+                print('\n')
+                print('  * NEWTON DOES NOT CONVERGE -- try to: ' '\n'
+                      '    - increase Newton tolerance' '\n'
+                      '    - start from smaller sgm0' '\n'
+                      '    - increase the value of alpha' '\n'
+                      '    - use print_lev = 7 to see all details')
+                print('\n')
                 break
 
             # ---------------------- #

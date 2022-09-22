@@ -191,14 +191,17 @@ THE CODE FOLLOWS A NOTATION DIFFERENT FROM THE ONE OF THE PAPER. It follows the 
         Default is True. We suggest to set relaxed_criteria = relaxed_estimates = True
         If adaptive_scheme = FULL, relaxed_estimates and relaxed_criteria are forced to be False
         (the weights already are a relaxation of the estimates)
+
+    WARNING: if relaxed_criteria or relaxed_estimate = True, for some CV folds LA.solve(AJ.T @ AJ, AJ.T @ b)
+        may be singular: relaxed_criteria or relaxed_estimate or do not use CV
         
     :param sgm: starting value of the augmented lagrangian parameter sigma. Default is 5e-3
     
     :param sgm_increase: increasing factor of sigma.  Default is 5.
     
-    :param sgm_change: we increase sgm -- sgm *= sgm_increase -- every sgm_change iterations. Default is 1
+    :param sgm_change: we increase sgm -- sgm *= sgm_increase -- every sgm_change iterations. Default is 3
     
-    :param tol_nwt: tolerance for the nwt algorithm. Default is 1e-6
+    :param tol_nwt: tolerance for the nwt algorithm. Default is 1e-5
     
     :param tol_dal: global tolerance of the dal algorithm. Default is 1e-6
     

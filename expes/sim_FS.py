@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     # seed = np.random.randint(0, 1e5)
     seed = 54
-    # np.random.seed(seed)
+    np.random.seed(seed)
 
     # ------------------------ #
     #  choose simulation type  #

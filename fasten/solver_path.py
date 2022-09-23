@@ -788,7 +788,6 @@ class FASTEN:
         start_curves = time.time()
 
         if regression_type == RegressionType.FF:
-            print(best_model.x_coeffs.shape)
             best_model.x_coeffs = best_model.x_coeffs.reshape(n, k_estimation, k_estimation)
 
         best_model.x_curves = af.compute_curves(best_model, b_std)

@@ -265,17 +265,20 @@ class SolverFS:
                 print('   nwt time = %.4f' % time_nwt)
                 print('   -------------------------------------------------------------------')
 
+            # if not convergence_nwt and kkt1 > 10 * tol_nwt:
             if not convergence_nwt:
                 print('\n')
                 print('  * NEWTON DOES NOT CONVERGE -- try to: ' '\n'
                       '    - increase Newton tolerance' '\n'
+                      '         newton tolerance = ', tol_nwt, '\n'
+                      '                     kkt1 = ', kkt1, '\n'
                       '    - start from smaller sgm0' '\n'
                       '    - increase the value of alpha' '\n'
                       '    - use print_lev = 7 to see all details')
                 print('\n')
                 break
 
-            # ---------------------- #
+                # ---------------------- #
             #    update variables    #
             # ---------------------- #
 
@@ -453,7 +456,7 @@ class SolverFS:
         if not out_core.convergence:
             print('\n')
             print('   * THE SOLVER HAS NOT CONVERGED:')
-            print('     (try to increase the number of iterations)')
+            # print('     (try to increase the number of iterations)')
             print('\n')
 
         # ------------------- #

@@ -405,6 +405,7 @@ class AuxiliaryFunctionsFC(AuxiliaryFunctionsFS):
         x_basis = b_basis
 
         # find scores
+        # b = b @ b_basis @ np.sum(b_basis, axis=0)
         b = np.sum(b, axis=1)
         A = (A @ b_basis).transpose(1, 0, 2).reshape(m, n * k)
 

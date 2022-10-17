@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
     max_selected = max(50, 2 * not0)  # max number of selected features
     # max_selected = 100
-    check_selection_criterion = True  # if True and the selection criterion has a discontinuity, we stop the search
+    check_selection_criterion = False  # if True and the selection criterion has a discontinuity, we stop the search
 
     wgts = 1  # individual penalty weights
     alpha = 0.2  # lam2 = (1-alpha) * c_lam * lam1_max

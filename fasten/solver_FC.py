@@ -193,7 +193,7 @@ class SolverFC:
                         # conjugate method
                         if r * k > r_exact and use_cg:
                             method = 'CG'
-                            d = (ss_LA.cg(H, rhs, tol=1e-04, maxiter=1000)[0]).reshape(m, k)
+                            d = (ss_LA.cg(H, rhs, tol=1e-04, maxiter=1000)[0])
 
                         # exact method:
                         else:

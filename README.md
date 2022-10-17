@@ -134,7 +134,7 @@ THE CODE FOLLOWS A NOTATION DIFFERENT FROM THE ONE OF THE PAPER. It follows the 
                 FF: A_coeff = A_scores @ A_basis.T @ x_basis1
         If FALSE the coefficients form is automatically computed using the following basis
             FS: b_basis = x_basis = FPC of b
-            SF: A_basis (all feat) = x_basis (all feat) = FPC of the first features of A
+            SF: SF: A_basis (feat j) = x_basis (feat j) = FPC of feature j 
             FC: A_basis = x_basis = FPC of b
             FF: A_basis = x_basis1 = x_basis2 = FPC of b
             

@@ -65,7 +65,7 @@ class GenerateSimFS:
 
         b += eps
 
-        return [b, eps]
+        return b, eps
 
 
 class GenerateSimFF:
@@ -209,7 +209,7 @@ class GenerateSimFC(GenerateSimFF):
         neval = grid.shape[0]
         m = A.shape[1]
         x_true_expanded = (np.eye(neval) * x_true.reshape(not0, 1, neval)).reshape(not0 * neval, neval)
-        b = A[0:not0, :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true_expanded
+        b = A[10:(not0+10), :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true_expanded
         b -= b.mean(axis=0)
 
         # create the errors -- and their covariance using a matern process
@@ -222,7 +222,7 @@ class GenerateSimFC(GenerateSimFF):
 
         b += eps
 
-        return [b, eps]
+        return b, eps
 
 
 class GenerateSimSF(GenerateSimFC):
@@ -242,8 +242,9 @@ class GenerateSimSF(GenerateSimFC):
 
         neval = grid.shape[0]
         m = A.shape[1]
-        x_true_expanded = (np.eye(neval) * x_true.reshape(not0, 1, neval)).reshape(not0 * neval, neval)
-        b = np.sum(A[0:not0, :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true_expanded, axis=1)
+        # x_true_expanded = (np.eye(neval) * x_true.reshape(not0, 1, neval)).reshape(not0 * neval, neval)
+        # b = np.sum(A[0:not0, :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true_expanded, axis=1)
+        b = A[0:not0, :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true.ravel()
         b -= b.mean(axis=0)
 
         # create the errors -- and their covariance using a matern process
@@ -255,5 +256,4 @@ class GenerateSimSF(GenerateSimFC):
 
         b += eps
 
-        return [b, eps]
-
+        return b, eps

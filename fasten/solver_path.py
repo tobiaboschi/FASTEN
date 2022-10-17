@@ -46,7 +46,7 @@
                 FF: A_coeff = A_scores @ A_basis.T @ x_basis1
         If FALSE the coefficients form is automatically computed using the following basis
             FS: b_basis = x_basis = FPC of b
-            SF: A_basis (all feat) = x_basis (all feat) = FPC of the first features of A
+            SF: A_basis (feat j) = x_basis (feat j) = FPC of feature j
             FC: A_basis = x_basis = FPC of b
             FF: A_basis = x_basis1 = x_basis2 = FPC of b
     :param x_basis: Default is False. if coefficient_form = TRUE, you have to pass the basis function of x.

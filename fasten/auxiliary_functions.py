@@ -3,7 +3,6 @@
     class RegressionType: definition of the regression type
         FS = Function-on-Scalar
         FF = Function-on-Function
-        FC = Function Concurrent
         SF = Scalar-on-Function
 
     class SelectionCriteria: definition of the selection criterion to evaluate the best model
@@ -16,8 +15,8 @@
         SOFT = The adaptive step is performed just on the optimal value of lambda
         FULL = a new path is investigated starting from the weights obtained at the previous path
 
-    class AuxiliaryFunctionsFS, AuxiliaryFunctionsFF, AuxiliaryFunctionsFC:
-        contain the auxiliary functions for the FS, FF and FC (and SF) model.
+    class AuxiliaryFunctionsFS, AuxiliaryFunctionsFF, AuxiliaryFunctionsSF:
+        contain the auxiliary functions for the FS, FF and SF model.
             prox: proximal operator of the penalty
             prox_star: conjugate function of the proximal operator
             p_star: conjugate function of the penalty
@@ -26,9 +25,9 @@
             phi_y: function phi(y) defined in the dal algorithm
             grad_phi: gradient of the function phi(y)
 
-    class OutputSolverCore: definition of the output for the core part of each fasten (FS, FF, FC, and SF)
+    class OutputSolverCore: definition of the output for the core part of each fasten (FS, FF, and SF)
 
-    class OutputSolver: definition of the output for each fasten (FS, FF, FC, and SF)
+    class OutputSolver: definition of the output for each fasten (FS, FF, and SF)
 
     class OutputPathCore: definition of the output for the core part of path fasten
 
@@ -57,9 +56,8 @@ class RegressionType(enum.Enum):
     """
 
     FS = 1
-    FC = 2
-    FF = 3
-    SF = 4
+    FF = 2
+    SF = 3
 
 
 class SelectionCriteria(enum.Enum):
@@ -362,7 +360,7 @@ class AuxiliaryFunctionsFF(AuxiliaryFunctionsFS):
         return x_curves
 
 
-class AuxiliaryFunctionsFC(AuxiliaryFunctionsFS):
+class AuxiliaryFunctionsSF(AuxiliaryFunctionsFS):
 
     def prim_obj(self, A, x, b, lam1, lam2, wgts):
 
@@ -384,35 +382,6 @@ class AuxiliaryFunctionsFC(AuxiliaryFunctionsFS):
         """
 
         return y + b - A @ self.prox(x - sgm * Aty, wgts * sgm * lam1, wgts * sgm * lam2).ravel()
-
-    def compute_coefficients_form(self, A, b, k):
-        """
-        compute coefficient form given the orginal matrices
-
-        """
-
-        n, m, _ = A.shape
-
-        # find k
-        eigvals, b_basis_full = LA.eigh(b.T @ b)
-        var_exp = np.cumsum(np.flip(eigvals)) / np.sum(eigvals)
-        k_suggested = max(np.argwhere(var_exp > 0.9)[0][0] + 1, 2)
-        if not k:
-            k = k_suggested
-
-        # find basis
-        b_basis = b_basis_full[:, -k:]
-        x_basis = b_basis
-
-        # find scores
-        # b = b @ b_basis @ np.sum(b_basis, axis=0)
-        b = np.sum(b, axis=1)
-        A = (A @ b_basis).transpose(1, 0, 2).reshape(m, n * k)
-
-        return A, b, k, k_suggested, b_basis_full, x_basis, var_exp
-
-
-class AuxiliaryFunctionsSF(AuxiliaryFunctionsFC):
 
     def compute_coefficients_form(self, A, b, k):
         """

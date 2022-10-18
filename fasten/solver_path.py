@@ -9,23 +9,20 @@
     :param regression_type: RegressionType object
         FS: function on scalar
         SF: scalar on function
-        FC: concurrent model
         FF: function on function
     :param A: design matrix
         FS: np.array((m, n))
-        FF, SF, FC: np.array((n, m, neval))
+        FF, SF: np.array((n, m, neval))
     :param b: response matrix/vector
-        FS, FF, FC: np.array((m, neval))
+        FS, FF: np.array((m, neval))
         SF: np.array(m, )
     :param k: number of basis function. If k is not passed to the function, it is selected automatically such that:
         FF: more than 90% of response variability
-        FC: more than 95% of response variability
         FS: min(5, more than 99% of response variability)
         SF: k = 5
     :param wgts: individual weights for the penalty. 1 (default) or np.array with shape (n, 1)
     :param selection_criterion: an object of class SelectionCriteria, it can be CV, GCV, EBIC.
         The output of the fasten will contain the best model according to the chosen criterion.
-        We recommend to use CV for FC model
     :param n_folds: if selection_criterion is CV, number of folds to compute it. Default = 10
     :param adaptive_scheme: an object of class AdaptiveScheme. It can be NONE, SOFT, FULL.
         NONE: no adaptive step is performed
@@ -37,17 +34,14 @@
             For b - with b_scores = b @ b_basis, we have:
                 FS: b_coeff = b_scores @ b_basis.T @ x_basis
                 SF: b_coeff = b
-                FC: b_coeff = integral(b)
                 FF: b_coeff = b_scores @ b_basis.T @ x_basis2
             For A - with A_scores = A @ A_basis, we have:
                 FS: A_coeff = A
                 SF: A_coeff = A_scores @ A_basis.T @ x_basis
-                FC: A_coeff = A_scores @ A_basis.T @ x_basis
                 FF: A_coeff = A_scores @ A_basis.T @ x_basis1
         If FALSE the coefficients form is automatically computed using the following basis
             FS: b_basis = x_basis = FPC of b
             SF: A_basis (feat j) = x_basis (feat j) = FPC of feature j
-            FC: A_basis = x_basis = FPC of b
             FF: A_basis = x_basis1 = x_basis2 = FPC of b
     :param x_basis: Default is False. if coefficient_form = TRUE, you have to pass the basis function of x.
         If you use the same basis for all the features then:
@@ -69,14 +63,13 @@
         we stop the search. If max selected is None or bigger than 80, we suggest to set
         check_selection_criterion = True. Default is False.
     :param alpha: we have lam1 = alpha * c_lam * lam1_max, lam2 = (1 - alpha) * c_lam * lam1_max
-        We recoomend to use alpha = 0.5 for the FC model. Default is 0.2
     :param lam1_max: smallest values of lam1 that selects 0 features. If it is None, it is computed inside the function
     :param x0: initial value for the variable of the primal problem -- vector 0 if not given
         FF: np.array((n * k, k))
         all the others: np.array((n, k))
     :param y0: initial value fot the first variable of the dual problem -- vector of 0 if not given
         FF, FS: np.array((m, k))
-        FC, SF: np.array((m))
+        SF: np.array((m))
     :param z0: initial value for the second variable of the dual problem -- vector of 0 if not given
         FF: np.array((n * k, k))
         all the others: np.array((n, k))
@@ -113,19 +106,19 @@
             ------------------------------------------------------------------------------------------------------------
             :attribute x_curves: curves computed just for the not 0 estimated coefficients
                 FF: x_basis1 @ x_scores @ x_basis2.T, np.array((r, neval, neval))
-                FS, FC, SF: x_curves = x_scores @ x_basis.T,  np.array((r, neval))
+                FS, SF: x_curves = x_scores @ x_basis.T,  np.array((r, neval))
                 They are returned as None by this function then and computed for the best models in path_solver
             :attribute x_coeffs: standardized estimated coefficients. They are estimated based on:
                 (b - b.mean) / b.std()
-                FS, FC, SF: np.array((n, k))
+                FS, SF: np.array((n, k))
                 FF: np.array((n, k, k))
             :attribute x_basis: they are returned as None by this function then inserted in path_solver
             :attribute b_coeffs: coefficient form of b
-                FS, FF, FC: np.array((m, k))
+                FS, FF: np.array((m, k))
                 SF: np.array(m, ), same as b, but standardized
             :attribute A_coeffs: coefficient form of A
                 FS: np.array((m, n))
-                FF, SF, FC: np.array((n, m, k))
+                FF, SF: np.array((n, m, k))
             :attribute y: optimal value of the first dual variable
             :attribute z: optimal value of the second dual variable
             :attribute r: number of selected features (after adaptive step if it is performed)
@@ -133,11 +126,11 @@
             :attribute indx: position of the selected features
             :attribute selection_criterion_value: value of the chosen selected criterion
             :attribute sgm: final value of the augmented lagrangian parameter sigma
-            :attribute c_lam: specifc c_lam value used for the returned model
+            :attribute c_lam: specific c_lam value used for the returned model
             :attribute alpha: same as input
             :attribute lam1_max: same as input
-            :attribute lam1: specifc lasso penalization value used for the returned model
-            :attribute lam2: specifc ridge penalization value used for the returned model
+            :attribute lam1: specific lasso penalization value used for the returned model
+            :attribute lam2: specific ridge penalization value used for the returned model
             :attribute time: total time of dal
             :attribute iters: total dal's iteration
             :attribute Aty: np.dot(A.T(), y) computed at the optimal y. Useful to implement warmstart
@@ -172,10 +165,10 @@ from tqdm.auto import tqdm
 from numpy import linalg as LA
 from sklearn.model_selection import KFold
 from fasten.solver_FF import SolverFF
-from fasten.solver_FC import SolverFC
+from fasten.solver_SF import SolverSF
 from fasten.solver_FS import SolverFS
 from fasten.auxiliary_functions import RegressionType, SelectionCriteria, AdaptiveScheme
-from fasten.auxiliary_functions import AuxiliaryFunctionsFC, AuxiliaryFunctionsFF, AuxiliaryFunctionsFS, AuxiliaryFunctionsSF
+from fasten.auxiliary_functions import AuxiliaryFunctionsFF, AuxiliaryFunctionsFS, AuxiliaryFunctionsSF
 from fasten.auxiliary_functions import OutputPath, OutputPathCore, plot_selection_criterion
 
 
@@ -485,13 +478,8 @@ class FASTEN:
             solver = SolverFF()
             af = AuxiliaryFunctionsFF()
 
-        elif regression_type == RegressionType.FC:
-            solver = SolverFC()
-            af = AuxiliaryFunctionsFC()
-            select_k_estimation = False
-
         else:
-            solver = SolverFC()
+            solver = SolverSF()
             af = AuxiliaryFunctionsSF()
             select_k_estimation = False
 
@@ -730,7 +718,7 @@ class FASTEN:
 
             y0, z0, sgm0 = best_model.y, best_model.z[indx, :], best_model.sgm
 
-            if regression_type == regression_type.FF or regression_type == regression_type.FS:
+            if regression_type != regression_type.SF:
                 AJty0 = AJ.T @ y0
             else:
                 AJty0 = (AJ.T @ y0).reshape(best_model.r, k)

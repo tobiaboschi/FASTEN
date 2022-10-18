@@ -20,7 +20,7 @@ if __name__ == '__main__':
     #  choose simulation type  #
     # ------------------------ #
 
-    regression_type = RegressionType.FF  # FF, FC, SF, FC
+    regression_type = RegressionType.FF  # FF, FS, SF
     GenSim = GenerateSimFF(seed)
 
     selection_criterion = SelectionCriteria.CV  # CV, GCV, or EBIC

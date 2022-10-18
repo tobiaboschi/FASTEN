@@ -1,4 +1,4 @@
-"""code to run the FC fasten on synthetic data"""
+"""code to run the SF fasten on synthetic data"""
 
 
 import numpy as np
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     #  choose simulation type  #
     # ------------------------ #
 
-    regression_type = RegressionType.SF  # FF, FC, SF, FC
+    regression_type = RegressionType.SF  # FF, FS, SF
     GenSim = GenerateSimSF(seed)
 
     selection_criterion = SelectionCriteria.CV  # CV, GCV, or EBIC

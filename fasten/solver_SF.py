@@ -1,5 +1,5 @@
-""" class SolverFC
-        fasten for Function Concurrent and Scalar-on-Function regression
+""" class SolverSF
+        fasten for Scalar-on-Function regression
 
     solver_core: carries out the Dual Augmented Lagrangian minimization algorithm
     fasten: pre-process --> solver_core --> post-process
@@ -8,9 +8,9 @@
     --------------------------------------------------------------------------------------------------------------------
     :param A: design matrix
         FS: np.array((m, n))
-        FF, SF, FC: np.array((n, m, neval))
+        FF, SF: np.array((n, m, neval))
     :param b: response matrix/vector
-        FS, FF, FC: np.array((m, neval))
+        FS, FF: np.array((m, neval))
         SF: np.array(m, )
     :param k: number of basis function
     :param wgts: individual weights for the penalty. 1 (default) or np.array with shape (n, 1)
@@ -22,7 +22,7 @@
         all the others: np.array((n, k))
     :param y0: initial value fot the first variable of the dual problem -- vector of 0 if not given
         FF, FS: np.array((m, k))
-        FC, SF: np.array((m))
+        SF: np.array((m))
     :param z0: initial value for the second variable of the dual problem -- vector of 0 if not given
         FF: np.array((n * k, k))
         all the others: np.array((n, k))
@@ -47,18 +47,18 @@
     --------------------------------------------------------------------------------------------------------------------
     :return x_curves: curves computed just for the not 0 estimated coefficients
         FF: x_basis1 @ x_scores @ x_basis2.T, np.array((r, neval, neval))
-        FS, FC, SF: x_curves = x_scores @ x_basis.T,  np.array((r, neval))
+        FS, SF: x_curves = x_scores @ x_basis.T,  np.array((r, neval))
         They are returned as None by this function then and computed for the best models in path_solver
     :return x_coeffs: standardized estimated coefficients. They are estimated based on: (b - b.mean) / b.std()
-        FS, FC, SF: np.array((n, k))
+        FS, SF: np.array((n, k))
         FF: np.array((n, k, k))
     :return x_basis: they are returned as None by this function then inserted in path_solver
     :return b_coeffs: coefficient form of b
-        FS, FF, FC: np.array((m, k))
+        FS, FF: np.array((m, k))
         SF: np.array(m, ), same as b, but standardized
     :return A_coeffs: coefficient form of A
         FS: np.array((m, n))
-        FF, SF, FC: np.array((n, m, k))
+        FF, SF: np.array((n, m, k))
     :return y: optimal value of the first dual variable
     :return z: optimal value of the second dual variable
     :return r: number of selected features (after adaptive step if it is performed)
@@ -84,10 +84,10 @@ import numpy as np
 from numpy import linalg as LA
 import scipy.sparse.linalg as ss_LA
 from scipy.linalg import block_diag
-from fasten.auxiliary_functions import SelectionCriteria, AuxiliaryFunctionsFC, OutputSolver, OutputSolverCore
+from fasten.auxiliary_functions import SelectionCriteria, AuxiliaryFunctionsSF, OutputSolver, OutputSolverCore
 
 
-class SolverFC:
+class SolverSF:
 
     def solver_core(self, A, b, k, m, n, wgts,
                     lam1, lam2,
@@ -102,7 +102,7 @@ class SolverFC:
         #    initialize variables    #
         # -------------------------- #
 
-        af = AuxiliaryFunctionsFC()
+        af = AuxiliaryFunctionsSF()
 
         x = x0
         y = y0

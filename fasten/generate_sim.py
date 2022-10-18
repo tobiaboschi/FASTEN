@@ -1,7 +1,7 @@
 """ 
 Definition of classes to generate A, b, and x for the simulations in different regression framework
 
-class GenerateSimFS, GenerateSimFF, GenerateSimFC, GenerateSimSF
+class GenerateSimFS, GenerateSimFF, GenerateSimSF
 """
 
 import numpy as np
@@ -176,21 +176,17 @@ class GenerateSimFF:
         return b, eps
 
 
-class GenerateSimFC(GenerateSimFF):
+class GenerateSimSF(GenerateSimFF):
 
     def __init__(self, seed):
-        
         self.seed = seed
 
     def generate_x(self, not0, grid, sd_x, mu_x, l_x, nu_x):
-
         """
         Generate coefficient matrix x: np.array((n, neval, neval))
         """
 
         np.random.seed(self.seed)
-        # np.random.seed(self.seed + 1)
-        # np.random.seed(np.random.randint(0, 1e5))
         print('  * creating features')
 
         neval = grid.shape[0]
@@ -199,48 +195,6 @@ class GenerateSimFC(GenerateSimFF):
         x_true = np.random.multivariate_normal(mu_x * np.ones(neval), cov_x, not0)
         return x_true
 
-    def compute_b_plus_eps(self, A, x_true, not0, grid, snr, mu_eps, l_eps, nu_eps):
-
-        """
-        Compute the response the errors terms epsilon and the response b
-        """
-
-        np.random.seed(self.seed)
-        # np.random.seed(self.seed + 2)
-        # np.random.seed(np.random.randint(0, 1e5))
-        print('  * computing b')
-
-        neval = grid.shape[0]
-        m = A.shape[1]
-        x_true_expanded = (np.eye(neval) * x_true.reshape(not0, 1, neval)).reshape(not0 * neval, neval)
-        # b = A[10:(not0+10), :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true_expanded
-        b = A[0:not0, :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true_expanded
-
-        # b2 = 0
-        # for i in range(not0):
-        #     b2 += A[i, :, :] * np.repeat(x_true[i, :].reshape(1, neval), m, axis=0)
-        # print(np.sum(b - b2))
-
-        b -= b.mean(axis=0)
-
-        # create the errors -- and their covariance using a matern process
-        print('  * creating errors')
-
-        sd_eps = np.std(b) / np.sqrt(snr)
-        cov_eps = sd_eps ** 2 * Matern(length_scale=l_eps, nu=nu_eps)(grid.reshape(-1, 1))
-        eps = np.random.multivariate_normal(mu_eps * np.ones(neval), cov_eps, m)
-        eps -= eps.mean(axis=0)
-
-        b += eps
-
-        return b, eps
-
-
-class GenerateSimSF(GenerateSimFC):
-
-    def __init__(self, seed):
-       
-        self.seed = seed
 
     def compute_b_plus_eps(self, A, x_true, not0, grid, snr, mu_eps, l_eps, nu_eps):
 

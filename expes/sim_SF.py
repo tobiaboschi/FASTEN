@@ -11,9 +11,9 @@ from fasten.generate_sim import GenerateSimSF
 
 if __name__ == '__main__':
 
-    # seed = np.random.randint(0, 1e5)
+    # seed = np.random.randint(1, 2**30, 1)
+    # np.random.seed(seed)
     seed = 54
-    np.random.seed(seed)
 
     # ------------------------ #
     #  choose simulation type  #

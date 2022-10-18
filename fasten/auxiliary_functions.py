@@ -396,7 +396,7 @@ class AuxiliaryFunctionsFC(AuxiliaryFunctionsFS):
         # find k
         eigvals, b_basis_full = LA.eigh(b.T @ b)
         var_exp = np.cumsum(np.flip(eigvals)) / np.sum(eigvals)
-        k_suggested = max(np.argwhere(var_exp > 0.95)[0][0] + 1, 2)
+        k_suggested = max(np.argwhere(var_exp > 0.9)[0][0] + 1, 2)
         if not k:
             k = k_suggested
 

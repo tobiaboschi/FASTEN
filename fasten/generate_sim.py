@@ -121,7 +121,7 @@ class GenerateSimFF:
         """
         Generate coefficient matrix x: np.array((n, neval, neval))
         """
-        
+
         np.random.seed(self.seed)
         print('  * creating features')
 
@@ -189,6 +189,8 @@ class GenerateSimFC(GenerateSimFF):
         """
 
         np.random.seed(self.seed)
+        # np.random.seed(self.seed + 1)
+        # np.random.seed(np.random.randint(0, 1e5))
         print('  * creating features')
 
         neval = grid.shape[0]
@@ -204,12 +206,21 @@ class GenerateSimFC(GenerateSimFF):
         """
 
         np.random.seed(self.seed)
+        # np.random.seed(self.seed + 2)
+        # np.random.seed(np.random.randint(0, 1e5))
         print('  * computing b')
 
         neval = grid.shape[0]
         m = A.shape[1]
         x_true_expanded = (np.eye(neval) * x_true.reshape(not0, 1, neval)).reshape(not0 * neval, neval)
-        b = A[10:(not0+10), :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true_expanded
+        # b = A[10:(not0+10), :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true_expanded
+        b = A[0:not0, :, :].transpose(1, 0, 2).reshape(m, not0 * neval) @ x_true_expanded
+
+        # b2 = 0
+        # for i in range(not0):
+        #     b2 += A[i, :, :] * np.repeat(x_true[i, :].reshape(1, neval), m, axis=0)
+        # print(np.sum(b - b2))
+
         b -= b.mean(axis=0)
 
         # create the errors -- and their covariance using a matern process

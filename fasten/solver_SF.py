@@ -286,7 +286,7 @@ class SolverSF:
                 if np.sum(1 * indx_new - 1 * indx) != 0:
                     indx = indx_new
                     AJ = A[:, np.repeat(indx, k)]
-                    r = np.int32(AJ.shape[1] / k)
+                    r = int(AJ.shape[1] / k)
 
             x = x_temp
             xj = x[indx, :]

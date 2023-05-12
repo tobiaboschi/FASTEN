@@ -236,11 +236,11 @@ class SolverSF:
                 # --------------------------- #
 
                 if r > 0:
-                    # kkt1 = np.sum(LA.norm((AJ @ x_temp[indx, :].ravel()) - b - y)) / (1 + np.sum(LA.norm(b)))
-                    kkt1 = (np.sum(LA.norm((AJ @ x_temp[indx, :].ravel()) - b - y)) /
-                            (1 + np.sum(LA.norm(b)) + np.sum(LA.norm(x_temp[indx, :].ravel()))))
+                    # LA.norm(A @ x_temp.reshape(n * k) - b - y) / (1 + LA.norm(b))
+                    kkt1 = (LA.norm((AJ @ x_temp[indx, :].ravel()) - b - y) /
+                            (1 + LA.norm(b) + np.sum(LA.norm(x_temp[indx, :], axis=1))))
                 else:
-                    kkt1 = np.sum(LA.norm(A @ x_temp.reshape(n * k) - b - y)) / (1 + np.sum(LA.norm(b)))
+                    kkt1 = LA.norm(A @ x_temp.reshape(n * k) - b - y) / (1 + LA.norm(b))
 
                 if print_lev > 2:
                     if it_nwt + 1 > 9:
@@ -264,18 +264,18 @@ class SolverSF:
                 print('   nwt time = %.4f' % time_nwt)
                 print('   -------------------------------------------------------------------')
 
-                # if not convergence_nwt and kkt1 > 10 * tol_nwt:
-                if not convergence_nwt:
-                    print('\n')
-                    print('  * NEWTON DOES NOT CONVERGE -- try to: ' '\n'
-                          '    - increase Newton tolerance' '\n'
-                          '         newton tolerance = ', tol_nwt, '\n'
-                          '                     kkt1 = ', kkt1, '\n'
-                          '    - start from smaller sgm0' '\n'
-                          '    - increase the value of alpha' '\n'
-                          '    - use print_lev = 7 to see all details')
-                    print('\n')
-                    break
+            # if not convergence_nwt and kkt1 > 10 * tol_nwt:
+            if not convergence_nwt:
+                print('\n')
+                print('  * NEWTON DOES NOT CONVERGE -- try to: ' '\n'
+                      '    - increase Newton tolerance' '\n'
+                      '         newton tolerance = ', tol_nwt, '\n'
+                      '                     kkt1 = ', kkt1, '\n'
+                      '    - start from smaller sgm0' '\n'
+                      '    - increase the value of alpha' '\n'
+                      '    - use print_lev = 7 to see all details')
+                print('\n')
+                break
 
             # ---------------------- #
             #    update variables    #
@@ -286,7 +286,7 @@ class SolverSF:
                 if np.sum(1 * indx_new - 1 * indx) != 0:
                     indx = indx_new
                     AJ = A[:, np.repeat(indx, k)]
-                    r = np.int(AJ.shape[1] / k)
+                    r = np.int32(AJ.shape[1] / k)
 
             x = x_temp
             xj = x[indx, :]
@@ -298,7 +298,7 @@ class SolverSF:
             # --------------------------- #
 
             # compute kkt3
-            kkt3 = np.sum(LA.norm(z + Aty, axis=1)) / (1 + np.sum(LA.norm(z, axis=1)) + np.sum(LA.norm(y)))
+            kkt3 = np.sum(LA.norm(z + Aty, axis=1)) / (1 + np.sum(LA.norm(z, axis=1)) + LA.norm(y))
 
             # compute objective functions
             prim = af.prim_obj(AJ, xj, b, lam1, lam2, wgtsj)
@@ -348,7 +348,7 @@ class SolverSF:
         # ---------------------------- #
 
         m, nk = A.shape
-        n = np.int(nk / k)
+        n = np.int32(nk / k)
 
         # ------------------------------------- #
         #    compute lam1 max, lam1 and lam2    #

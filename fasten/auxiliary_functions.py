@@ -209,7 +209,7 @@ class AuxiliaryFunctionsFF(AuxiliaryFunctionsFS):
         """
 
         k = v.shape[1]
-        n = np.int(v.shape[0] / k)
+        n = np.int32(v.shape[0] / k)
         v_line = v.reshape(n, k * k)
 
         return (v_line / (1 + par2) * np.maximum(0, 1 - par1 / LA.norm(v_line, axis=1).reshape(n, 1))).reshape(n * k, k)
@@ -222,7 +222,7 @@ class AuxiliaryFunctionsFF(AuxiliaryFunctionsFS):
         """
 
         k = v.shape[1]
-        n = np.int(v.shape[0] / k)
+        n = np.int32(v.shape[0] / k)
 
         return np.sum(np.maximum(0, LA.norm(v.reshape(n, k * k), axis=1).reshape(n, 1) - par1) ** 2 / (2 * par2))
 
@@ -234,7 +234,7 @@ class AuxiliaryFunctionsFF(AuxiliaryFunctionsFS):
         """
 
         k = x.shape[1]
-        n = np.int(x.shape[0] / k)
+        n = np.int32(x.shape[0] / k)
         norms_x = LA.norm(x.reshape(n, k * k), axis=1).reshape(n, 1)
 
         return 0.5 * LA.norm(A @ x - b) ** 2 + lam2 / 2 * np.sum(wgts * norms_x ** 2) + lam1 * np.sum(wgts * norms_x)
@@ -247,7 +247,7 @@ class AuxiliaryFunctionsFF(AuxiliaryFunctionsFS):
         """
 
         k = x.shape[1]
-        n = np.int(x.shape[0] / k)
+        n = np.int32(x.shape[0] / k)
 
         return (LA.norm(y) ** 2 / 2 + np.sum(b * y) +
                 LA.norm(np.sqrt((1 + wgts * sgm * lam2) / (2 * sgm)) *

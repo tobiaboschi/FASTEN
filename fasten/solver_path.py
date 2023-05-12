@@ -206,7 +206,7 @@ class FASTEN:
 
         else:
             m, nk = A.shape
-            n = np.int(nk / k)
+            n = np.int32(nk / k)
 
         # -------------------------- #
         #    create output arrays    #

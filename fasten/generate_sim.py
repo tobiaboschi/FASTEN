@@ -33,7 +33,7 @@ class GenerateSimFS:
         Generate coefficient matrix x: np.array((n, neval, neval))
         """
 
-        np.random.seed(self.seed)
+        np.random.seed(self.seed + 1)
         print('  * creating features')
 
         neval = grid.shape[0]
@@ -47,7 +47,7 @@ class GenerateSimFS:
         Compute the response the errors terms epsilon and the response b
         """
 
-        np.random.seed(self.seed)
+        np.random.seed(self.seed + 2)
         print('  * computing b')
 
         neval = grid.shape[0]
@@ -83,18 +83,6 @@ class GenerateSimFF:
         np.random.seed(self.seed)
         print('  * creating A')
 
-        # neval = grid.shape[0]
-        # A = np.zeros((n, int(m+np.floor(m/3)), neval))
-        # for i in tqdm(range(n)):
-        #     cov_Ai = sd_A ** 2 * Matern(length_scale=l_A, nu=nu_A)(grid.reshape(-1, 1))
-        #     Ai = np.random.multivariate_normal(mu_A * np.ones(neval), cov_Ai, int(m+np.floor(m/3)))
-        #     A[i, :, :] = (Ai - Ai.mean(axis=0)) / Ai.std(axis=0)  # each A should already have std = 1 and mean = 0
-        #
-        # if test:
-        #     return A[:, 0:m, :], A[:, m:, :]
-        # else:
-        #     return A[:, 0:m, :]
-
         neval = grid.shape[0]
         if test:
 
@@ -122,7 +110,7 @@ class GenerateSimFF:
         Generate coefficient matrix x: np.array((n, neval, neval))
         """
 
-        np.random.seed(self.seed)
+        np.random.seed(self.seed + 1)
         print('  * creating features')
 
         neval = grid.shape[0]
@@ -155,7 +143,7 @@ class GenerateSimFF:
         Compute the response the errors terms epsilon and the response b
         """
 
-        np.random.seed(self.seed)
+        np.random.seed(self.seed + 2)
         print('  * computing b')
         neval = grid.shape[0]
         m = A.shape[1]
@@ -186,7 +174,7 @@ class GenerateSimSF(GenerateSimFF):
         Generate coefficient matrix x: np.array((n, neval, neval))
         """
 
-        np.random.seed(self.seed)
+        np.random.seed(self.seed + 1)
         print('  * creating features')
 
         neval = grid.shape[0]
@@ -202,7 +190,7 @@ class GenerateSimSF(GenerateSimFF):
         Compute the response the errors terms epsilon and the response b
         """
 
-        np.random.seed(self.seed)
+        np.random.seed(self.seed + 2)
         print('  * computing b')
 
         neval = grid.shape[0]

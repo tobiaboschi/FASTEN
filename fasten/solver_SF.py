@@ -286,7 +286,7 @@ class SolverSF:
                 if np.sum(1 * indx_new - 1 * indx) != 0:
                     indx = indx_new
                     AJ = A[:, np.repeat(indx, k)]
-                    r = int(AJ.shape[1] / k)
+                    r = np.int32(AJ.shape[1] / k)
 
             x = x_temp
             xj = x[indx, :]
@@ -348,7 +348,7 @@ class SolverSF:
         # ---------------------------- #
 
         m, nk = A.shape
-        n = int(nk / k)
+        n = np.int32(nk / k)
 
         # ------------------------------------- #
         #    compute lam1 max, lam1 and lam2    #

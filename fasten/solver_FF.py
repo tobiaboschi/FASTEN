@@ -160,7 +160,7 @@ class SolverFF:
                 if isinstance(wgtsj, np.ndarray):
                     wgtsj = wgts[indx, :]
 
-                r = int(AJ.shape[1] / k)
+                r = np.int32(AJ.shape[1] / k)
 
                 # ------------------------- #
                 #    compute direction d    #
@@ -300,7 +300,7 @@ class SolverFF:
                     indx = indx_new
                     indx_krep = np.repeat(indx, k)
                     AJ = A[:, indx_krep]
-                    r = int(AJ.shape[1] / k)
+                    r = np.int32(AJ.shape[1] / k)
 
             x = x_temp
             xj = x[indx_krep, :]
@@ -363,7 +363,7 @@ class SolverFF:
         # ---------------------------- #
 
         m, nk = A.shape
-        n = int(nk / k)
+        n = np.int32(nk / k)
 
         # ------------------------------------- #
         #    compute lam1 max, lam1 and lam2    #

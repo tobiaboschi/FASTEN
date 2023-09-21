@@ -456,7 +456,7 @@ class SolverFS:
         if not out_core.convergence:
             print('\n')
             print('   * THE SOLVER HAS NOT CONVERGED:')
-            # print('     (try  to increase the number of iterations)')
+            # print('     (try to increase the number of iterations)')
             print('\n')
 
         # ------------------- #

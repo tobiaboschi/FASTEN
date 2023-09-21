@@ -532,7 +532,7 @@ class FASTEN:
         else:
 
             k_suggested = -1
-            var_exp = -1
+            var_exp = None
 
             if regression_type == RegressionType.FS:
                 _, k = b.shape
@@ -878,7 +878,7 @@ class FASTEN:
             else:
                 print(' k suggested = %.d   |   k used = %d ' % (k_suggested, k))
             print('-----------------------------------------------------------------------')
-            if var_exp != -1:
+            if var_exp is not None:
                 print(' variance explained = %.4f' % var_exp[k - 1])
                 print('-----------------------------------------------------------------------')
             print('')

@@ -61,7 +61,9 @@ TO RUN THE CODE:
     3) Lunch the desired experiments, e.g. `python expes/sim_FF.py`    
     
     !) for Apple Mx processors' users, it is suggested to manually install 'numpy' for achieving better performance. See:  
-       https://gist.github.com/MarkDana/a9481b8134cf38a556cf23e1e815dafb 
+       https://gist.github.com/MarkDana/a9481b8134cf38a556cf23e1e815dafb (outdated website). Run:
+        `pip install cython pybind11`
+        `pipinstall numpy cython`
     
 
 

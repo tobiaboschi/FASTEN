@@ -1,8 +1,8 @@
 """ class FASTEN
-        fasten for different values of c_lam and different regression type
+        fungcn for different values of c_lam and different regression type
 
     solver_core: solve the problem for one value of c_lam (lambda)
-    fasten: call several times solver_core -- one for each value of lambda -- and performs adaptive step
+    fungcn: call several times solver_core -- one for each value of lambda -- and performs adaptive step
 
     INPUT PARAMETERS:
     --------------------------------------------------------------------------------------------------------------------
@@ -21,8 +21,10 @@
         FS: min(5, more than 99% of response variability)
         SF: k = 5
     :param wgts: individual weights for the penalty. 1 (default) or np.array with shape (n, 1)
+    :param fpc_features: an enum object of class FPCFeatures, it can be response or features. In the FF model,
+        we can choose to use the response FPC as basis for the features, or each features can use its own FPC
     :param selection_criterion: an object of class SelectionCriteria, it can be CV, GCV, EBIC.
-        The output of the fasten will contain the best model according to the chosen criterion.
+        The output of the fungcn will contain the best model according to the chosen criterion.
     :param n_folds: if selection_criterion is CV, number of folds to compute it. Default = 10
     :param adaptive_scheme: an object of class AdaptiveScheme. It can be NONE, SOFT, FULL.
         NONE: no adaptive step is performed
@@ -51,6 +53,9 @@
                 first dimension: x_basis1 and x_basis2, second dimension: basis of each features, and it has to be:
                 x_basis1 = A_basis, x_basis2 = b_basis
             All other models: x_basis is an (n, neval, k) tensor
+    :param b_std if coefficient form is True, you have to standardize b before computing coefficients and pass the
+        standard deviation as input: you need it to reconstruct the final model coefficients (curves or surfaces) and
+        the predicted responses
     :param c_lam_vec: np.array to determine the path of lambdas. Default: np.geomspace(1, 0.01, num=100)
         If just one number, a single run is performed and the output is in best_models.single_run
         Different regression model and different alpha, may requires longer/shorter grid. We reccomend the
@@ -167,9 +172,11 @@ from sklearn.model_selection import KFold
 from fasten.solver_FF import SolverFF
 from fasten.solver_SF import SolverSF
 from fasten.solver_FS import SolverFS
-from fasten.auxiliary_functions import RegressionType, SelectionCriteria, AdaptiveScheme
-from fasten.auxiliary_functions import AuxiliaryFunctionsFF, AuxiliaryFunctionsFS, AuxiliaryFunctionsSF
-from fasten.auxiliary_functions import OutputPath, OutputPathCore, plot_selection_criterion
+from fasten.enum_classes import RegressionType, SelectionCriteria, AdaptiveScheme, FPCFeatures
+from fasten.output_classes import OutputPath, OutputPathCore
+from fasten.auxiliary_functions_FS import AuxiliaryFunctionsFS
+from fasten.auxiliary_functions_FF import AuxiliaryFunctionsFF
+from fasten.auxiliary_functions_SF import AuxiliaryFunctionsSF
 
 
 class FASTEN:
@@ -206,7 +213,7 @@ class FASTEN:
 
         else:
             m, nk = A.shape
-            n = np.int32(nk / k)
+            n = int(nk / k)
 
         # -------------------------- #
         #    create output arrays    #
@@ -284,10 +291,9 @@ class FASTEN:
                 if found_1st_model:
 
                     # if the jump between two steps is too high, stop the search
-                    if (check_selection_criterion and selection_criterion != SelectionCriteria.CV and
+                    if (check_selection_criterion and selection_criterion != SelectionCriteria.CV and fit.r > 5 and
                             np.abs((fit.selection_criterion_value - selection_criterion_vec[i-1]) /
-                                   min(selection_criterion_vec[i], selection_criterion_vec[i-1])) > 5 and
-                            fit.r > 5):
+                                   min(selection_criterion_vec[i], selection_criterion_vec[i-1])) > 5):
                         n_iter = i - 1
                         break
 
@@ -450,13 +456,13 @@ class FASTEN:
     def solver(self, regression_type,
                A, b, k=None, wgts=1,
                selection_criterion=SelectionCriteria.GCV, n_folds=10,
-               adaptive_scheme=AdaptiveScheme.SOFT,
-               coefficients_form=False, x_basis=None,
+               adaptive_scheme=AdaptiveScheme.SOFT, fpc_features=FPCFeatures.response,
+               coefficients_form=False, x_basis=None, b_std=None,
                c_lam_vec=None, c_lam_vec_adaptive=None,
                max_selected=None, check_selection_criterion=False,
                alpha=0.2, lam1_max=None,
                x0=None, y0=None, z0=None, Aty0=None,
-               select_k_estimation=True,
+               compute_curves=True, select_k_estimation=True,
                relaxed_criteria=True, relaxed_estimates=True,
                sgm=5e-3, sgm_increase=5, sgm_change=1,
                tol_nwt=1e-6, tol_dal=1e-6,
@@ -465,7 +471,7 @@ class FASTEN:
                plot=False, print_lev=1):
 
         # ----------------------------------------------------- #
-        #   initialize fasten and auxiliary functions objects   #
+        #   initialize fungcn and auxiliary functions objects   #
         # ----------------------------------------------------- #
         # (we set a different k fot estimation just for the FF model)
 
@@ -497,7 +503,8 @@ class FASTEN:
         #    computing coefficient form if necessary    #
         # --------------------------------------------- #
 
-        print('')
+        if print_lev > 0:
+            print('')
 
         start_fasten = time.time()
 
@@ -509,7 +516,7 @@ class FASTEN:
 
             return -1
 
-        b_std = np.array([1])  # we need to define b_sdt if coefficients form
+        # b_std = np.array([1])  # we need to define b_sdt if coefficients form
         A_full, b_full, b_basis_full = None, None, None  # define variables if not coefficient forms
 
         if not coefficients_form:
@@ -527,9 +534,17 @@ class FASTEN:
             if select_k_estimation:
                 A_full, b_full = np.copy(A), np.copy(b)
 
-            A, b, k, k_suggested, b_basis_full, x_basis, var_exp = af.compute_coefficients_form(A, b, k)
+            if regression_type == RegressionType.FF and fpc_features == FPCFeatures.features:
+                A, b, k, k_suggested, b_basis_full, x_basis, var_exp = af.compute_coefficients_form_using_FPC_features(A, b, k)
+
+            else:
+                A, b, k, k_suggested, b_basis_full, x_basis, var_exp = af.compute_coefficients_form(A, b, k)
 
         else:
+
+            if b_std is None:
+                raise Exception('If coefficient form is true, you have to standardize the response before computing '
+                                'the coefficients and pass the standard deviation as input')
 
             k_suggested = -1
             var_exp = None
@@ -603,11 +618,11 @@ class FASTEN:
         # ---------------------- #
         #    call output core    #
         # ---------------------- #
-
-        print('')
-        print('-----------------------------------------------------------------------')
-        print(' FASTEN ')
-        print('-----------------------------------------------------------------------')
+        if print_lev > 0:
+            print('')
+            print('-----------------------------------------------------------------------')
+            print(' FASTEN ')
+            print('-----------------------------------------------------------------------')
 
         fit = self.solver_core(solver, regression_type,
                                A, b, k, wgts,
@@ -776,10 +791,11 @@ class FASTEN:
 
         start_curves = time.time()
 
-        if regression_type == RegressionType.FF:
-            best_model.x_coeffs = best_model.x_coeffs.reshape(n, k_estimation, k_estimation)
+        if compute_curves:
+            if regression_type == RegressionType.FF:
+                best_model.x_coeffs = best_model.x_coeffs.reshape(n, k_estimation, k_estimation)
 
-        best_model.x_curves = af.compute_curves(best_model, b_std)
+            best_model.x_curves = af.compute_curves(best_model, b_std)
 
         time_curves = time.time() - start_curves
 
@@ -911,7 +927,7 @@ class FASTEN:
                 main = 'CV'
             else:
                 main = 'ebic'
-            plot_selection_criterion(fit.r_vec, fit.selection_criterion_vec, alpha, c_lam_vec[:n_iter], main)
+            af.plot_selection_criterion(fit.r_vec, fit.selection_criterion_vec, alpha, c_lam_vec[:n_iter], main)
 
         # ------------------- #
         #    create output    #

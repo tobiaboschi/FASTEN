@@ -1,8 +1,8 @@
 """ class SolverSF
-        fasten for Scalar-on-Function regression
+        fungcn for Scalar-on-Function regression.
 
     solver_core: carries out the Dual Augmented Lagrangian minimization algorithm
-    fasten: pre-process --> solver_core --> post-process
+    fungcn: pre-process --> solver_core --> post-process
 
     INPUT PARAMETERS:
     --------------------------------------------------------------------------------------------------------------------
@@ -84,8 +84,9 @@ import numpy as np
 from numpy import linalg as LA
 import scipy.sparse.linalg as ss_LA
 from scipy.linalg import block_diag
-from fasten.auxiliary_functions import SelectionCriteria, AuxiliaryFunctionsSF, OutputSolver, OutputSolverCore
-
+from fasten.enum_classes import SelectionCriteria
+from fasten.output_classes import OutputSolver, OutputSolverCore
+from fasten.auxiliary_functions_SF import AuxiliaryFunctionsSF
 
 class SolverSF:
 
@@ -286,7 +287,7 @@ class SolverSF:
                 if np.sum(1 * indx_new - 1 * indx) != 0:
                     indx = indx_new
                     AJ = A[:, np.repeat(indx, k)]
-                    r = np.int32(AJ.shape[1] / k)
+                    r = int(AJ.shape[1] / k)
 
             x = x_temp
             xj = x[indx, :]
@@ -348,7 +349,7 @@ class SolverSF:
         # ---------------------------- #
 
         m, nk = A.shape
-        n = np.int32(nk / k)
+        n = int(nk / k)
 
         # ------------------------------------- #
         #    compute lam1 max, lam1 and lam2    #

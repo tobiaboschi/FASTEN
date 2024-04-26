@@ -1,13 +1,13 @@
-"""code to run the FF fasten on synthetic data"""
+"""code to run the FF fungcn on synthetic data."""
 
 
 import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 from fasten.solver_path import FASTEN
-from fasten.auxiliary_functions import RegressionType, SelectionCriteria, AdaptiveScheme
-from fasten.auxiliary_functions import standardize_A
-from fasten.generate_sim import GenerateSimFF
+from fasten.enum_classes import RegressionType, SelectionCriteria, AdaptiveScheme, FPCFeatures
+from fasten.auxiliary_functions_FF import AuxiliaryFunctionsFF
+from fasten.generate_sim_FF import GenerateSimFF
 
 
 if __name__ == '__main__':
@@ -22,10 +22,12 @@ if __name__ == '__main__':
 
     regression_type = RegressionType.FF  # FF, FS, SF
     GenSim = GenerateSimFF(seed)
+    af = AuxiliaryFunctionsFF()
+    fpc_features = FPCFeatures.features
 
-    selection_criterion = SelectionCriteria.CV  # CV, GCV, or EBIC
+    selection_criterion = SelectionCriteria.GCV  # CV, GCV, or EBIC
     n_folds = 5  # number of folds if cv is performed
-    adaptive_scheme = AdaptiveScheme.SOFT  # type of adaptive scheme: FULL, SOFT, NONE
+    adaptive_scheme = AdaptiveScheme.FULL  # type of adaptive scheme: FULL, SOFT, NONE
 
     easy_x = True  # if the features are easy or complex to estimate
     relaxed_criteria = True  # if True a linear regression is fitted on the features to select the best lambda
@@ -38,7 +40,7 @@ if __name__ == '__main__':
 
     m = 300  # number of samples
     n = 500  # number of features
-    not0 = 10  # number of non 0 features
+    not0 = 5  # number of non 0 features
 
     domain = np.array([0, 1])  # domains of the curves
     neval = 100  # number of points to construct the true predictors and the response
@@ -54,7 +56,7 @@ if __name__ == '__main__':
     nu_eps = 2.5  # smoothness of eps Matern covariance
 
     # ----------------------- #
-    #  set fasten parameters  #
+    #  set fungcn parameters  #
     # ----------------------- #
 
     k = None  # number of FPC scores, if None automatically selected
@@ -120,10 +122,10 @@ if __name__ == '__main__':
     #  standardize A  #
     # --------------- #
     print('  * standardizing A')
-    A = standardize_A(A)
+    A = af.standardize_design_matrix(A)
 
     # --------------- #
-    #  launch fasten  #
+    #  launch fungcn  #
     # --------------- #
     print('')
     print('  * start fgen')
@@ -132,14 +134,14 @@ if __name__ == '__main__':
     # -------- #
     #  FASTEN  #
     # -------- #
-    
+
     solver = FASTEN()
     out_path_FF = solver.solver(
         regression_type=regression_type,
         A=A, b=b, k=k, wgts=wgts,
         selection_criterion=selection_criterion, n_folds=n_folds,
-        adaptive_scheme=adaptive_scheme,
-        coefficients_form=False, x_basis=None,
+        adaptive_scheme=adaptive_scheme, fpc_features=fpc_features,
+        coefficients_form=False, x_basis=None, b_std=None,
         c_lam_vec=c_lam_vec, c_lam_vec_adaptive=c_lam_vec_adaptive,
         max_selected=max_selected, check_selection_criterion=check_selection_criterion,
         alpha=alpha, lam1_max=None,
@@ -171,7 +173,7 @@ if __name__ == '__main__':
     # MSE for y
     xj_curves = out_FF.x_curves
     AJ = A[indx, :, :].transpose(1, 0, 2).reshape(m, r * neval)
-    b_hat = AJ @ xj_curves.reshape(r * neval, neval)
+    b_hat = AJ @ xj_curves.reshape(r * neval, neval) + b.mean(axis=0)
     MSEy = np.mean(LA.norm(b - b_hat, axis=1) ** 2 / LA.norm(b, axis=1) ** 2)
 
     # MSE for x

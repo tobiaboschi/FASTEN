@@ -1,13 +1,13 @@
-"""code to run the SF fasten on synthetic data"""
+"""code to run the SF fungcn on synthetic data"""
 
 
 import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 from fasten.solver_path import FASTEN
-from fasten.auxiliary_functions import RegressionType, SelectionCriteria, AdaptiveScheme
-from fasten.auxiliary_functions import standardize_A
-from fasten.generate_sim import GenerateSimSF
+from fasten.enum_classes import RegressionType, SelectionCriteria, AdaptiveScheme
+from fasten.auxiliary_functions_SF import AuxiliaryFunctionsSF
+from fasten.generate_sim_SF import GenerateSimSF
 
 if __name__ == '__main__':
 
@@ -21,6 +21,7 @@ if __name__ == '__main__':
 
     regression_type = RegressionType.SF  # FF, FS, SF
     GenSim = GenerateSimSF(seed)
+    af = AuxiliaryFunctionsSF()
 
     selection_criterion = SelectionCriteria.CV  # CV, GCV, or EBIC
     n_folds = 5  # number of folds if cv is performed
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     nu_eps = 1.5  # smoothness of eps Matern covariance
 
     # ----------------------- #
-    #  set fasten parameters  #
+    #  set fungcn parameters  #
     # ----------------------- #
 
     k = None  # number of FPC scores, if None automatically selected
@@ -116,10 +117,10 @@ if __name__ == '__main__':
     #  standardize A  #
     # --------------- #
     print('  * standardizing A')
-    A = standardize_A(A)
+    A = af.standardize_design_matrix(A)
 
     # --------------- #
-    #  launch fasten  #
+    #  launch fungcn  #
     # --------------- #
     print('')
     print('  * start fgen')
@@ -135,7 +136,7 @@ if __name__ == '__main__':
         A=A, b=b, k=k, wgts=wgts,
         selection_criterion=selection_criterion, n_folds=n_folds,
         adaptive_scheme=adaptive_scheme,
-        coefficients_form=False, x_basis=None,
+        coefficients_form=False, x_basis=None, b_std=None,
         c_lam_vec=c_lam_vec, c_lam_vec_adaptive=c_lam_vec_adaptive,
         max_selected=max_selected, check_selection_criterion=check_selection_criterion,
         alpha=alpha, lam1_max=None,

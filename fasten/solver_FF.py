@@ -1,8 +1,8 @@
 """ class SolverFF
-        fasten for Function-on-Function regression
+        fungcn for Function-on-Function regression
 
     solver_core: carries out the Dual Augmented Lagrangian minimization algorithm
-    fasten: pre-process --> solver_core --> post-process
+    fungcn: pre-process --> solver_core --> post-process
 
    INPUT PARAMETERS:
     --------------------------------------------------------------------------------------------------------------------
@@ -85,7 +85,9 @@ import numpy as np
 from numpy import linalg as LA
 import scipy.sparse.linalg as ss_LA
 from scipy.linalg import block_diag
-from fasten.auxiliary_functions import SelectionCriteria, AuxiliaryFunctionsFF, OutputSolver, OutputSolverCore
+from fasten.enum_classes import SelectionCriteria
+from fasten.output_classes import OutputSolver, OutputSolverCore
+from fasten.auxiliary_functions_FF import AuxiliaryFunctionsFF
 
 
 class SolverFF:
@@ -160,7 +162,7 @@ class SolverFF:
                 if isinstance(wgtsj, np.ndarray):
                     wgtsj = wgts[indx, :]
 
-                r = np.int32(AJ.shape[1] / k)
+                r = int(AJ.shape[1] / k)
 
                 # ------------------------- #
                 #    compute direction d    #

@@ -10,36 +10,42 @@ FILES DESCRIPTION:
     
     fasten ---------------------------------------------------------------------------------------------------------------------------
 
-        fasten/solver_path.py:
-          class to run FASTEN
-
-        fasten/solver_FF.py:
-          class to solve the DAL problem for the Function-on-Function (FF) problem. 
-
-        fasten/solver_FS.py:
-          class to solve the DAL problem for the Function-on-Scalar (FS) problem. 
-
-        fasten/solver_SF.py:
-          class to solve the DAL problem for the Scalar-on-Function (SF) problem.
-
-        fasten/auxiliary_functions.py
-          auxiliary functions' classes called by the different solver, including proximal operator functions and conjugate functions.
-
-        fasten/generate_sim.py
-          classes to generate syntehtic data for FF, FS, and SF. For FF it is also possible to generate a test and a train data. 
+        auxiliary_functions_X.py
+            auxiliary functions class called by the X solver, including proximal operator functions and conjugate functions
+    
+        enum_classes.py: 
+            definition of classes needed to specify the problem
+    
+        generate_sim_X.py
+            class to generate syntehtic data for the X model 
+    
+        output_classes 
+          classes needed to define the different outputs 
+        
+        solver_X.py:
+           class to solve the DAL problem for the X problem
+        
+        solver_path.py:
+           class to run FASTEN for the FF, FS and SF models 
+        
+        solver_path_logit.py:
+           class to run FASTEN for the logit model
       
       
     expes ---------------------------------------------------------------------------------------------------------------------------- 
     
-      expes/sim_FF.py:
-        main file to run FASTEN on synthetic data for the FF model 
-
-      expes/sim_FS.py:
-        main file to run FASTEN on synthetic data for the FS model
+        sim_FF.py:
+          main file to run FASTEN on synthetic data for the FF model 
         
-      expes/sim_SF.py:
-        main file to run FASTEN on synthetic data for the SF model
+        sim_FS.py:
+          main file to run FASTEN on synthetic data for the FS model
+          
+        sim_SF.py:
+          main file to run FASTEN on synthetic data for the SF model
         
+        sim_SF.py:                                                     
+            main file to run FASTEN on synthetic data for the logit model
+          
 
 
 
@@ -104,6 +110,9 @@ THE CODE FOLLOWS A NOTATION DIFFERENT FROM THE ONE OF THE PAPER. It follows the 
         
     :param wgts: individual weights for the penalty. 1 (default) or np.array with shape (n, 1)
     
+    :param fpc_features: an enum object of class FPCFeatures, it can be response or features. In the FF model, 
+        we can choose to use the response FPC as basis for the features, or each features can use its own FPC 
+    
     :param selection_criterion: an object of class SelectionCriteria, it can be CV, GCV, EBIC.
         The output of the fasten will contain the best model according to the chosen criterion.
         
@@ -138,6 +147,10 @@ THE CODE FOLLOWS A NOTATION DIFFERENT FROM THE ONE OF THE PAPER. It follows the 
                 first dimension: x_basis1 and x_basis2, second dimension: basis of each features, and it has to be:
                 x_basis1 = A_basis, x_basis2 = b_basis
             All other models: x_basis is an (n, neval, k) tensor
+
+    :param b_std if coefficient form is True, you have to standardize b before computing coefficients and pass the
+        standard deviation as input: you need it to reconstruct the final model coefficients (curves or surfaces) and
+        the predicted responses
             
     :param c_lam_vec: np.array to determine the path of lambdas. Default: np.geomspace(1, 0.01, num=100)
         If just one number, a single run is performed and the output is in best_models.single_run

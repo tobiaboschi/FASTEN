@@ -1,8 +1,8 @@
 """ class SolverFS
-        fasten for Function-on-Scalar regression
+        fungcn for Function-on-Scalar regression
 
     solver_core: carries out the Dual Augmented Lagrangian minimization algorithm
-    fasten: pre-process --> solver_core --> post-process
+    fungcn: pre-process --> solver_core --> post-process
 
     INPUT PARAMETERS:
     --------------------------------------------------------------------------------------------------------------------
@@ -84,7 +84,9 @@ import numpy as np
 from numpy import linalg as LA
 import scipy.sparse.linalg as ss_LA
 from scipy.linalg import block_diag
-from fasten.auxiliary_functions import SelectionCriteria, AuxiliaryFunctionsFS, OutputSolver, OutputSolverCore
+from fasten.enum_classes import SelectionCriteria
+from fasten.output_classes import OutputSolver, OutputSolverCore
+from fasten.auxiliary_functions_FS import AuxiliaryFunctionsFS
 
 class SolverFS:
 
